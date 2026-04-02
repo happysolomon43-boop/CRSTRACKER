@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>CRS Tracker</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&family=Source+Serif+4:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #1A0F06;
+  --surface:   #251508;
+  --card:      #2F1A0A;
+  --border:    rgba(232,160,32,.15);
+  --border-hi: rgba(232,160,32,.4);
+  --amber:     #E8A020;
+  --amber-hi:  #F5C842;
+  --amber-dim: rgba(232,160,32,.12);
+  --rust:      #C45E1A;
+  --cream:     #FAF3E0;
+  --cream-dim: rgba(250,243,224,.55);
+  --success:   #4CAF72;
+  --success-bg:#0D2B18;
+  --success-bd:rgba(76,175,114,.3);
+  --danger:    #E05C3A;
+  --danger-bg: #2B0D06;
+  --danger-bd: rgba(224,92,58,.3);
+  --warn:      #F5C842;
+  --warn-bg:   #2B1E06;
+  --text:      #FAF3E0;
+  --text-dim:  rgba(250,243,224,.5);
+  --text-faint:rgba(250,243,224,.28);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Source Serif 4', Georgia, serif;
+  min-height: 100vh;
+  padding-bottom: 40px;
+}
+
+/* ─── SCREENS ─────────────────────────────── */
+.screen { display:none; }
+.screen.active { display:block; }
+
+/* ─── SETUP SCREEN ────────────────────────── */
+#setup {
+  min-height: 100vh;
+  display:flex; align-items:center; justify-content:center;
+  padding: 24px;
+}
+.setup-card {
+  background: var(--card);
+  border: 1px solid var(--border-hi);
+  border-radius: 20px;
+  padding: 50px 40px;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 0 60px rgba(232,160,32,.08);
+  animation: fadeUp .5s ease;
+}
+.setup-logo {
+  text-align: center;
+  margin-bottom: 36px;
+}
+.setup-logo .icon {
+  width: 64px; height: 64px;
+  background: linear-gradient(135deg, var(--rust), var(--amber));
+  border-radius: 16px;
+  display: flex; align-items:center; justify-content:center;
+  margin: 0 auto 16px;
+  font-size: 28px;
+  box-shadow: 0 8px 24px rgba(232,160,32,.25);
+}
+.setup-logo h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--amber-hi);
+  letter-spacing: -.3px;
+}
+.setup-logo p {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-top: 6px;
+}
+.field-label {
+  font-size: 11px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--amber);
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+.bankroll-input-wrap {
+  position: relative;
+  margin-bottom: 28px;
+}
+.currency-sym {
+  position: absolute;
+  left: 18px; top: 50%;
+  transform: translateY(-50%);
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  color: var(--amber);
+  font-weight: 700;
+}
+#bankrollInput {
+  width: 100%;
+  background: var(--surface);
+  border: 2px solid var(--border-hi);
+  border-radius: 12px;
+  padding: 18px 18px 18px 44px;
+  font-family: 'Playfair Display', serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text);
+  outline: none;
+  transition: border-color .2s;
+  -moz-appearance: textfield;
+}
+#bankrollInput::-webkit-inner-spin-button,
+#bankrollInput::-webkit-outer-spin-button { -webkit-appearance: none; }
+#bankrollInput:focus { border-color: var(--amber); }
+
+.setup-info {
+  background: var(--amber-dim);
+  border: 1px solid var(--border-hi);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 13px;
+  color: var(--cream-dim);
+  margin-bottom: 28px;
+  line-height: 1.6;
+}
+.setup-info strong { color: var(--amber-hi); }
+
+.btn-primary {
+  width: 100%;
+  background: linear-gradient(135deg, var(--rust), var(--amber));
+  color: var(--bg);
+  font-family: 'Playfair Display', serif;
+  font-size: 17px;
+  font-weight: 700;
+  border: none;
+  border-radius: 12px;
+  padding: 18px;
+  cursor: pointer;
+  transition: opacity .2s, transform .15s;
+  letter-spacing: .03em;
+}
+.btn-primary:hover { opacity: .9; transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); }
+
+/* ─── MAIN SCREEN ─────────────────────────── */
+#main { max-width: 480px; margin: 0 auto; padding: 0 16px; }
+
+/* Header */
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 0 16px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+.top-bar-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--amber-hi);
+}
+.top-bar-sub { font-size: 12px; color: var(--text-faint); margin-top: 2px; }
+.btn-icon {
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  border-radius: 8px;
+  width: 36px; height: 36px;
+  display:flex; align-items:center; justify-content:center;
+  cursor: pointer;
+  font-size: 16px;
+  transition: border-color .2s, color .2s;
+}
+.btn-icon:hover { border-color: var(--amber); color: var(--amber); }
+
+/* Bankroll card */
+.bankroll-card {
+  background: linear-gradient(135deg, var(--rust) 0%, #7A2E08 50%, var(--bg) 100%);
+  border-radius: 18px;
+  padding: 26px 24px;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 32px rgba(196,94,26,.2);
+}
+.bankroll-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(45deg, transparent, transparent 30px, rgba(255,255,255,.02) 30px, rgba(255,255,255,.02) 60px);
+}
+.bk-label {
+  font-size: 11px; letter-spacing:.18em; text-transform:uppercase;
+  color: rgba(250,243,224,.6); position:relative;
+}
+.bk-amount {
+  font-family:'Playfair Display',serif;
+  font-size: clamp(36px, 10vw, 52px);
+  font-weight: 900;
+  color: var(--amber-hi);
+  position: relative;
+  line-height: 1.1;
+  margin: 6px 0 4px;
+}
+.bk-amount .sym { font-size: 0.55em; vertical-align: top; margin-top: 8px; display: inline-block; }
+.bk-delta {
+  font-size: 13px;
+  position: relative;
+  color: rgba(250,243,224,.6);
+}
+.bk-delta.pos { color: var(--success); }
+.bk-delta.neg { color: var(--danger); }
+
+/* Round indicator */
+.round-track {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.round-dots {
+  display: flex; gap: 8px;
+}
+.rdot {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid rgba(232,160,32,.2);
+  transition: all .3s;
+}
+.rdot.active { background: var(--amber); border-color: var(--amber); box-shadow: 0 0 10px rgba(232,160,32,.4); }
+.rdot.lost { background: var(--danger); border-color: var(--danger); }
+.round-info { flex: 1; }
+.round-label { font-size: 11px; letter-spacing:.15em; text-transform:uppercase; color:var(--text-faint); }
+.round-text {
+  font-family: 'Playfair Display', serif;
+  font-size: 17px; font-weight: 700;
+  color: var(--text);
+  margin-top: 3px;
+}
+
+/* Stake card */
+.stake-card {
+  background: var(--card);
+  border: 2px solid var(--border-hi);
+  border-radius: 18px;
+  padding: 24px 22px;
+  margin-bottom: 16px;
+  text-align: center;
+  position: relative;
+}
+.stake-label {
+  font-size: 11px; letter-spacing:.18em; text-transform:uppercase;
+  color: var(--amber); font-weight:600; margin-bottom:10px;
+}
+.stake-amount {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(42px, 12vw, 64px);
+  font-weight: 900;
+  color: var(--amber-hi);
+  line-height: 1;
+}
+.stake-amount .sym { font-size: .5em; vertical-align: top; margin-top: 10px; display:inline-block; }
+.stake-sub {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-top: 10px;
+}
+.stake-sub span { color: var(--amber); font-weight: 600; }
+
+/* Action buttons */
+.action-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.btn-win, .btn-loss {
+  border: none;
+  border-radius: 16px;
+  padding: 22px 12px;
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .15s, box-shadow .2s, opacity .15s;
+  letter-spacing: .02em;
+  display: flex; flex-direction:column; align-items:center; gap: 6px;
+}
+.btn-win {
+  background: linear-gradient(135deg, #1E5C34, var(--success));
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(76,175,114,.2);
+}
+.btn-loss {
+  background: linear-gradient(135deg, #5C1A0A, var(--danger));
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(224,92,58,.2);
+}
+.btn-win:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(76,175,114,.35); }
+.btn-loss:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(224,92,58,.35); }
+.btn-win:active, .btn-loss:active { transform: translateY(0); }
+.btn-win .btn-icon-emoji, .btn-loss .btn-icon-emoji { font-size: 26px; }
+.btn-win .btn-sub, .btn-loss .btn-sub { font-size: 11px; font-family:'Source Serif 4',serif; letter-spacing:.1em; opacity:.8; }
+
+/* Warning banner */
+.warning-banner {
+  background: var(--warn-bg);
+  border: 1px solid rgba(245,200,66,.4);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  display: none;
+  font-size: 14px;
+  color: var(--warn);
+  line-height: 1.5;
+}
+.warning-banner.show { display: flex; gap: 10px; align-items:flex-start; }
+.warning-banner .wi { font-size: 20px; flex-shrink:0; }
+
+/* Stats strip */
+.stats-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.stat-mini {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 10px;
+  text-align: center;
+}
+.stat-mini .sm-val {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px; font-weight: 700;
+  color: var(--amber-hi);
+  line-height: 1;
+}
+.stat-mini .sm-lbl {
+  font-size: 10px; letter-spacing:.12em; text-transform:uppercase;
+  color: var(--text-faint); margin-top: 5px;
+}
+
+/* History section */
+.history-header {
+  display: flex; justify-content:space-between; align-items:center;
+  margin-bottom: 12px;
+  margin-top: 20px;
+}
+.history-title {
+  font-size: 12px; letter-spacing:.18em; text-transform:uppercase;
+  color: var(--amber); font-weight:600;
+}
+.btn-clear {
+  font-size: 11px; color: var(--text-faint);
+  background: none; border: 1px solid var(--border);
+  border-radius: 6px; padding: 4px 10px; cursor:pointer;
+  font-family:'Source Serif 4',serif;
+  transition: color .2s, border-color .2s;
+}
+.btn-clear:hover { color: var(--danger); border-color: var(--danger-bd); }
+
+.history-list { display:flex; flex-direction:column; gap:8px; }
+.hist-empty {
+  text-align:center; color:var(--text-faint); font-size:14px;
+  font-style:italic; padding: 28px 0;
+}
+.hist-item {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex; justify-content:space-between; align-items:center;
+  animation: fadeUp .3s ease;
+}
+.hist-item.win-item { border-color: var(--success-bd); }
+.hist-item.loss-item { border-color: var(--danger-bd); }
+.hist-item.bust-item { border-color: rgba(155,58,16,.5); background: var(--danger-bg); }
+.hist-left { display:flex; flex-direction:column; gap:3px; }
+.hist-cycle { font-size: 11px; color:var(--text-faint); letter-spacing:.08em; }
+.hist-desc { font-size: 14px; color: var(--text); font-weight:600; }
+.hist-right { text-align:right; }
+.hist-amount {
+  font-family:'Playfair Display',serif; font-size:16px; font-weight:700;
+}
+.hist-amount.pos { color:var(--success); }
+.hist-amount.neg { color:var(--danger); }
+.hist-bk { font-size:11px; color:var(--text-faint); margin-top:2px; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 30px; left:50%; transform:translateX(-50%) translateY(80px);
+  background: var(--card);
+  border: 1px solid var(--border-hi);
+  border-radius: 12px;
+  padding: 14px 24px;
+  font-size: 15px;
+  color: var(--text);
+  box-shadow: 0 8px 32px rgba(0,0,0,.4);
+  transition: transform .35s cubic-bezier(.34,1.56,.64,1), opacity .35s;
+  opacity: 0;
+  z-index: 999;
+  white-space: nowrap;
+  max-width: 90vw;
+  text-align: center;
+}
+.toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+
+/* Overlay / modal */
+.overlay {
+  position:fixed; inset:0;
+  background:rgba(0,0,0,.75);
+  display:none; align-items:center; justify-content:center;
+  z-index:100; padding: 24px;
+}
+.overlay.show { display:flex; }
+.modal {
+  background: var(--card);
+  border: 1px solid var(--border-hi);
+  border-radius: 20px;
+  padding: 32px 28px;
+  max-width: 360px; width:100%;
+  animation: fadeUp .3s ease;
+  box-shadow: 0 0 60px rgba(232,160,32,.1);
+}
+.modal h3 {
+  font-family:'Playfair Display',serif;
+  font-size:22px; font-weight:900;
+  margin-bottom: 10px;
+}
+.modal h3.red { color:var(--danger); }
+.modal h3.amber { color:var(--amber-hi); }
+.modal p { font-size:14px; color:var(--text-dim); line-height:1.6; margin-bottom:20px; }
+.modal-row { display:flex; gap:12px; }
+.btn-modal {
+  flex:1; padding:14px; border-radius:12px;
+  font-family:'Playfair Display',serif; font-size:15px; font-weight:700;
+  border:none; cursor:pointer; transition:opacity .2s;
+}
+.btn-modal:hover { opacity:.85; }
+.btn-modal.confirm { background: var(--danger); color:#fff; }
+.btn-modal.cancel { background: var(--surface); color:var(--text-dim); border:1px solid var(--border); }
+.btn-modal.ok { background: linear-gradient(135deg,var(--rust),var(--amber)); color:var(--bg); }
+
+/* Bust celebration/mourning */
+.bust-details {
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-bd);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin: 14px 0;
+  font-size: 13px; color:var(--text-dim); line-height:1.7;
+}
+.bust-details .row { display:flex; justify-content:space-between; }
+.bust-details .row span:last-child { color:var(--text); font-weight:600; }
+
+/* Animations */
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(16px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(232,160,32,.4); }
+  50%      { box-shadow: 0 0 0 10px rgba(232,160,32,0); }
+}
+.pulse { animation: pulse 2s infinite; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border-hi); border-radius:4px; }
+
+/* Reset confirm button */
+.btn-reset-link {
+  background:none; border:none;
+  font-size:12px; color:var(--text-faint);
+  cursor:pointer; text-decoration:underline;
+  font-family:'Source Serif 4',serif;
+  padding:0;
+}
+.btn-reset-link:hover { color:var(--danger); }
+
+@media(max-width:400px){
+  .stake-amount { font-size: 38px; }
+  .bk-amount { font-size: 34px; }
+}
+
+/* No Game Today button */
+.btn-no-game {
+  width: 100%;
+  background: transparent;
+  border: 1px dashed rgba(250,243,224,.25);
+  border-radius: 14px;
+  padding: 14px;
+  color: var(--text-faint);
+  font-family: 'Source Serif 4', serif;
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color .2s, color .2s, background .2s;
+  margin-bottom: 16px;
+  letter-spacing: .03em;
+}
+.btn-no-game:hover { border-color: rgba(250,243,224,.45); color: var(--cream-dim); background: rgba(250,243,224,.04); }
+.btn-no-game:disabled { opacity: .35; cursor: not-allowed; }
+
+/* Test notify button */
+.btn-test-notify {
+  width: 100%;
+  background: transparent;
+  border: 1px solid rgba(232,160,32,.2);
+  border-radius: 10px;
+  padding: 11px;
+  color: var(--amber-dim);
+  font-family: 'Source Serif 4', serif;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color .2s, color .2s;
+  margin-bottom: 8px;
+  letter-spacing: .05em;
+  color: rgba(232,160,32,.5);
+}
+.btn-test-notify:hover { border-color: var(--border-hi); color: var(--amber); }
+
+/* No-game history item */
+.hist-item.nogame-item { border-color: rgba(250,243,224,.08); opacity: .65; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ SETUP SCREEN ═══════════ -->
+<div id="setup" class="screen active">
+  <div class="setup-card">
+    <div class="setup-logo">
+      <div class="icon">📈</div>
+      <h1>CRS Tracker</h1>
+      <p>Compound Recovery System — Automated</p>
+    </div>
+
+    <div class="field-label">Enter Your Starting Bankroll</div>
+    <div class="bankroll-input-wrap">
+      <span class="currency-sym">₦</span>
+      <input type="number" id="bankrollInput" placeholder="10000" min="2001" step="100">
+    </div>
+
+    <div class="setup-info">
+      <strong>You only do this once.</strong> The system will remember your bankroll, track every bet, and always tell you exactly what to stake next. Just tap Win or Loss each day.
+    </div>
+
+    <button class="btn-primary" onclick="initSystem()">Start Tracking →</button>
+  </div>
+</div>
+
+<!-- ═══════════ MAIN SCREEN ═══════════ -->
+<div id="main" class="screen">
+
+  <div class="top-bar">
+    <div>
+      <div class="top-bar-title">CRS Tracker</div>
+      <div class="top-bar-sub" id="dateLabel">—</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-icon" onclick="showStats()" title="Stats">📊</button>
+      <button class="btn-icon" onclick="confirmReset()" title="Reset">↺</button>
+    </div>
+  </div>
+
+  <!-- Warning banner -->
+  <div class="warning-banner" id="warnBanner">
+    <span class="wi">⚠️</span>
+    <span id="warnText"></span>
+  </div>
+
+  <!-- Bankroll card -->
+  <div class="bankroll-card">
+    <div class="bk-label">Current Bankroll</div>
+    <div class="bk-amount"><span class="sym">₦</span><span id="bkAmount">0</span></div>
+    <div class="bk-delta" id="bkDelta">Starting balance</div>
+  </div>
+
+  <!-- Round tracker -->
+  <div class="round-track">
+    <div class="round-dots">
+      <div class="rdot" id="dot1"></div>
+      <div class="rdot" id="dot2"></div>
+      <div class="rdot" id="dot3"></div>
+    </div>
+    <div class="round-info">
+      <div class="round-label">Current Position</div>
+      <div class="round-text" id="roundText">Round 1 — Fresh Cycle</div>
+    </div>
+  </div>
+
+  <!-- Stake display -->
+  <div class="stake-card pulse" id="stakeCard">
+    <div class="stake-label">Stake This Bet</div>
+    <div class="stake-amount"><span class="sym">₦</span><span id="stakeAmt">0</span></div>
+    <div class="stake-sub" id="stakeSub">—</div>
+  </div>
+
+  <!-- Win / Loss buttons -->
+  <div class="action-row">
+    <button class="btn-win" id="btnWin" onclick="recordResult('win')">
+      <span class="btn-icon-emoji">✅</span>
+      <span>WIN</span>
+      <span class="btn-sub">Bet came through</span>
+    </button>
+    <button class="btn-loss" id="btnLoss" onclick="recordResult('loss')">
+      <span class="btn-icon-emoji">❌</span>
+      <span>LOSS</span>
+      <span class="btn-sub">Bet didn't land</span>
+    </button>
+  </div>
+
+  <!-- No Game Today -->
+  <button class="btn-no-game" id="btnNoGame" onclick="recordNoGameToday()">
+    🚫 &nbsp;No Game Today
+  </button>
+
+  <!-- Test Telegram -->
+  <button class="btn-test-notify" onclick="testNotify()">
+    🔔 &nbsp;Send test Telegram notification
+  </button>
+
+  <!-- Stats strip -->
+  <div class="stats-strip">
+    <div class="stat-mini">
+      <div class="sm-val" id="statCycles">0</div>
+      <div class="sm-lbl">Cycles</div>
+    </div>
+    <div class="stat-mini">
+      <div class="sm-val" id="statWins" style="color:var(--success)">0</div>
+      <div class="sm-lbl">Won</div>
+    </div>
+    <div class="stat-mini">
+      <div class="sm-val" id="statBusts" style="color:var(--danger)">0</div>
+      <div class="sm-lbl">Busts</div>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="history-header">
+    <div class="history-title">Bet History</div>
+    <button class="btn-clear" onclick="clearHistory()">Clear log</button>
+  </div>
+  <div class="history-list" id="histList">
+    <div class="hist-empty">No bets recorded yet.<br>Your history will appear here.</div>
+  </div>
+
+  <div style="text-align:center; margin-top:28px;">
+    <button class="btn-reset-link" onclick="confirmReset()">Reset & start over</button>
+  </div>
+
+</div>
+
+<!-- ═══════════ BUST MODAL ═══════════ -->
+<div class="overlay" id="bustOverlay">
+  <div class="modal">
+    <h3 class="red">💥 Bust — Cycle Failed</h3>
+    <p>All 3 rounds in this cycle lost. You accept the loss and reset. The system automatically scales your new stakes down to match your reduced bankroll.</p>
+    <div class="bust-details" id="bustDetails"></div>
+    <div class="modal-row">
+      <button class="btn-modal ok" onclick="closeBust()">Got it — Reset Cycle</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ WIN MODAL ═══════════ -->
+<div class="overlay" id="winOverlay">
+  <div class="modal">
+    <h3 class="amber" id="winModalTitle">✅ Cycle Complete!</h3>
+    <p id="winModalMsg">—</p>
+    <div class="modal-row">
+      <button class="btn-modal ok" onclick="closeWin()">Next Cycle →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ STATS MODAL ═══════════ -->
+<div class="overlay" id="statsOverlay">
+  <div class="modal">
+    <h3 class="amber">📊 Full Stats</h3>
+    <div id="statsContent" style="font-size:14px; color:var(--text-dim); line-height:2;"></div>
+    <div class="modal-row" style="margin-top:20px;">
+      <button class="btn-modal ok" onclick="document.getElementById('statsOverlay').classList.remove('show')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ RESET MODAL ═══════════ -->
+<div class="overlay" id="resetOverlay">
+  <div class="modal">
+    <h3 class="red">Reset Everything?</h3>
+    <p>This will erase your bankroll, all history, and all stats. You'll be taken back to the setup screen. This cannot be undone.</p>
+    <div class="modal-row">
+      <button class="btn-modal cancel" onclick="document.getElementById('resetOverlay').classList.remove('show')">Cancel</button>
+      <button class="btn-modal confirm" onclick="hardReset()">Yes, Reset</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+//  TELEGRAM MINI APP INIT
+// ═══════════════════════════════════════════
+
+const tg = window.Telegram && window.Telegram.WebApp;
+if (tg) {
+  tg.ready();
+  tg.expand();
+  // Match app background to Telegram theme
+  document.documentElement.style.setProperty('--bg', tg.themeParams.bg_color || '#1A0F06');
+}
+
+// ═══════════════════════════════════════════
+//  CONFIG — set this to your Railway URL
+// ═══════════════════════════════════════════
+
+const API = 'https://campus-esports-elite-backend2-production.up.railway.app';
+
+// ═══════════════════════════════════════════
+//  API CALLS
+// ═══════════════════════════════════════════
+
+async function apiGet() {
+  const r = await fetch(`${API}/api/state`);
+  if (r.status === 404) return null;
+  if (!r.ok) throw new Error('Server error');
+  return (await r.json()).state;
+}
+
+async function apiInit(bankroll) {
+  const r = await fetch(`${API}/api/init`, {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ bankroll })
+  });
+  if (!r.ok) { const e = await r.json(); throw new Error(e.error); }
+  return (await r.json()).state;
+}
+
+async function apiResult(outcome) {
+  const r = await fetch(`${API}/api/result`, {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ outcome })
+  });
+  if (!r.ok) { const e = await r.json(); throw new Error(e.error); }
+  return await r.json(); // { state, event }
+}
+
+async function apiNoGame() {
+  const r = await fetch(`${API}/api/no-game`, { method: 'POST' });
+  if (!r.ok) { const e = await r.json(); throw new Error(e.error); }
+  return (await r.json()).state;
+}
+
+async function apiDelete() {
+  await fetch(`${API}/api/state`, { method: 'DELETE' });
+}
+
+async function apiClearHistory() {
+  await fetch(`${API}/api/history`, { method: 'DELETE' });
+}
+
+// ═══════════════════════════════════════════
+//  MATH (client-side display only)
+// ═══════════════════════════════════════════
+
+function profitTarget(bankroll) { return Math.round(bankroll * 0.05); }
+function calcStake(lossesAccumulated, pt) { return Math.round((lossesAccumulated + pt) / 0.7); }
+
+// ═══════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════
+
+let S = null;
+let _busy = false;
+
+function setAllButtons(disabled) {
+  ['btnWin','btnLoss','btnNoGame'].forEach(id => {
+    const b = document.getElementById(id);
+    if (b) b.disabled = disabled;
+  });
+}
+
+window.addEventListener('load', async () => {
+  document.getElementById('dateLabel').textContent =
+    new Date().toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long'});
+  try {
+    S = await apiGet();
+    if (S) { showScreen('main'); renderAll(); }
+    else    { showScreen('setup'); }
+  } catch (e) {
+    showToast('⚠️ Could not reach server.');
+    showScreen('setup');
+  }
+});
+
+async function initSystem() {
+  const val = parseInt(document.getElementById('bankrollInput').value);
+  if (!val || val < 2001) { showToast('⚠️ Enter a bankroll above ₦2,000'); return; }
+  if (_busy) return; _busy = true;
+  showToast('⏳ Setting up...');
+  try {
+    S = await apiInit(val);
+    showScreen('main'); renderAll();
+    showToast("✅ System initialised. You're live.");
+  } catch (e) {
+    showToast(`⚠️ ${e.message}`);
+  } finally { _busy = false; }
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ═══════════════════════════════════════════
+//  RECORD RESULT
+// ═══════════════════════════════════════════
+
+async function recordResult(outcome) {
+  if (!S || _busy) return;
+  if (S.bankroll <= 2000) { showToast('⛔ Bankroll too low. Reload before betting.'); return; }
+  _busy = true; setAllButtons(true);
+
+  try {
+    const { state, event } = await apiResult(outcome);
+    S = state;
+    renderAll();
+
+    if (event.kind === 'win') {
+      document.getElementById('winModalTitle').textContent =
+        event.round === 1 ? '✅ Clean Win!' : `✅ Recovered on Round ${event.round}!`;
+      document.getElementById('winModalMsg').innerHTML =
+        `Cycle <strong>${event.cycleNumber}</strong> complete.<br>
+         Profit: <strong style="color:var(--success)">+₦${event.profit.toLocaleString()}</strong><br>
+         New bankroll: <strong style="color:var(--amber)">₦${event.bankroll.toLocaleString()}</strong>`;
+      document.getElementById('winOverlay').classList.add('show');
+
+    } else if (event.kind === 'bust') {
+      document.getElementById('bustDetails').innerHTML = `
+        <div class="row"><span>Total lost this cycle</span><span>₦${event.lostTotal.toLocaleString()}</span></div>
+        <div class="row"><span>Remaining bankroll</span><span>₦${event.bankroll.toLocaleString()}</span></div>
+        <div class="row"><span>New profit target (5%)</span><span>₦${event.newProfitTarget.toLocaleString()}</span></div>
+        <div class="row"><span>New Round 1 stake</span><span>₦${event.newStake.toLocaleString()}</span></div>`;
+      document.getElementById('bustOverlay').classList.add('show');
+
+    } else {
+      showToast(`Round ${event.round} — Stake ₦${event.newStake.toLocaleString()}`);
+    }
+  } catch (e) {
+    showToast(`⚠️ ${e.message}`);
+  } finally { _busy = false; setAllButtons(false); }
+}
+
+// ═══════════════════════════════════════════
+//  NO GAME TODAY
+// ═══════════════════════════════════════════
+
+async function recordNoGameToday() {
+  if (!S || _busy) return;
+  _busy = true; setAllButtons(true);
+  try {
+    S = await apiNoGame();
+    renderHistory();
+    showToast('🚫 No game logged for today.');
+  } catch (e) {
+    showToast(`⚠️ ${e.message}`);
+  } finally { _busy = false; setAllButtons(false); }
+}
+
+// ═══════════════════════════════════════════
+//  TEST TELEGRAM NOTIFICATION
+// ═══════════════════════════════════════════
+
+async function testNotify() {
+  showToast('⏳ Sending test notification...');
+  try {
+    const r = await fetch(`${API}/api/test-notify`, { method: 'POST' });
+    const d = await r.json();
+    if (r.ok) showToast('✅ Check your Telegram!');
+    else showToast(`⚠️ ${d.error}`);
+  } catch (e) {
+    showToast('⚠️ Could not reach server.');
+  }
+}
+
+// ═══════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════
+
+function renderAll() {
+  if (!S) return;
+
+  document.getElementById('bkAmount').textContent = S.bankroll.toLocaleString();
+  const diff = S.bankroll - S.initialBankroll;
+  const deltaEl = document.getElementById('bkDelta');
+  if (diff === 0) {
+    deltaEl.textContent = 'Starting balance'; deltaEl.className = 'bk-delta';
+  } else if (diff > 0) {
+    deltaEl.textContent = `+₦${diff.toLocaleString()} from start (${((diff/S.initialBankroll)*100).toFixed(1)}%)`;
+    deltaEl.className = 'bk-delta pos';
+  } else {
+    deltaEl.textContent = `−₦${Math.abs(diff).toLocaleString()} from start`;
+    deltaEl.className = 'bk-delta neg';
+  }
+
+  for (let i = 1; i <= 3; i++) {
+    const dot = document.getElementById(`dot${i}`);
+    dot.className = 'rdot';
+    if (i < S.round) dot.classList.add('lost');
+    else if (i === S.round) dot.classList.add('active');
+  }
+
+  const roundTexts = ['Round 1 — Fresh Cycle', 'Round 2 — Recovery Needed', 'Round 3 — Final Recovery'];
+  document.getElementById('roundText').textContent = roundTexts[S.round - 1];
+
+  document.getElementById('stakeAmt').textContent = S.currentStake.toLocaleString();
+  let subText = '';
+  if (S.round === 1) {
+    subText = `Win target: <span>+₦${S.profitTarget.toLocaleString()}</span> &nbsp;|&nbsp; Odds: <span>1.70</span>`;
+  } else if (S.round === 2) {
+    subText = `Recovering ₦${S.lossesAccumulated.toLocaleString()} + profit. Win = <span>+₦${S.profitTarget.toLocaleString()} net</span>`;
+  } else {
+    subText = `<span style="color:var(--danger)">Final chance</span>. Win = <span>+₦${S.profitTarget.toLocaleString()} net</span>. Loss = bust cycle.`;
+  }
+  document.getElementById('stakeSub').innerHTML = subText;
+
+  document.getElementById('statCycles').textContent = S.totalCycles;
+  document.getElementById('statWins').textContent   = S.successfulCycles;
+  document.getElementById('statBusts').textContent  = S.busts;
+
+  const warnBanner = document.getElementById('warnBanner');
+  if (S.bankroll <= 2000) {
+    document.getElementById('warnText').textContent = 'HARD STOP — Bankroll below ₦2,000. Do not place any more bets. Reload your bankroll before continuing.';
+    warnBanner.classList.add('show');
+  } else if (S.bankroll < S.initialBankroll * 0.4) {
+    document.getElementById('warnText').textContent = `Bankroll down to ${((S.bankroll/S.initialBankroll)*100).toFixed(0)}% of start. System is scaling down automatically — stay disciplined.`;
+    warnBanner.classList.add('show');
+  } else {
+    warnBanner.classList.remove('show');
+  }
+
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = document.getElementById('histList');
+  if (!S.history.length) {
+    list.innerHTML = '<div class="hist-empty">No bets recorded yet.<br>Your history will appear here.</div>';
+    return;
+  }
+  list.innerHTML = S.history.slice(0, 40).map(h => {
+    const isBust   = h.type === 'loss' && h.round === 3;
+    const isNoGame = h.type === 'no_game';
+    const cls    = isNoGame ? 'nogame-item' : h.type === 'win' ? 'win-item' : (isBust ? 'bust-item' : 'loss-item');
+    const amtCls = isNoGame ? '' : h.type === 'win' ? 'pos' : 'neg';
+    const amtVal = isNoGame ? '—' : h.type === 'win'
+      ? `+₦${h.profitTarget.toLocaleString()}`
+      : `−₦${h.stake.toLocaleString()}`;
+    const label  = isNoGame ? '🚫 NO GAME' : isBust ? '💥 BUST' : (h.type === 'win' ? '✅ WIN' : `❌ LOSS R${h.round}`);
+    return `
+      <div class="hist-item ${cls}">
+        <div class="hist-left">
+          <div class="hist-cycle">${h.date} · Cycle ${h.cycle}</div>
+          <div class="hist-desc">${label} — ${isNoGame ? 'Rest day' : `Staked ₦${h.stake.toLocaleString()}`}</div>
+        </div>
+        <div class="hist-right">
+          <div class="hist-amount ${amtCls}">${amtVal}</div>
+          <div class="hist-bk">BK: ₦${h.bankrollAfter.toLocaleString()}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+//  MODALS & ACTIONS
+// ═══════════════════════════════════════════
+
+function closeBust() {
+  document.getElementById('bustOverlay').classList.remove('show');
+  showToast(`Cycle reset. New stake: ₦${S.currentStake.toLocaleString()}`);
+}
+
+function closeWin() {
+  document.getElementById('winOverlay').classList.remove('show');
+}
+
+function showStats() {
+  const wr  = S.totalCycles > 0 ? ((S.successfulCycles / S.totalCycles) * 100).toFixed(1) : '—';
+  const net = S.bankroll - S.initialBankroll;
+  const netSign = net >= 0 ? '+' : '';
+  document.getElementById('statsContent').innerHTML = `
+    <div style="display:grid; gap:4px;">
+      <div style="display:flex;justify-content:space-between;"><span>Initial bankroll</span><span style="color:var(--text)">₦${S.initialBankroll.toLocaleString()}</span></div>
+      <div style="display:flex;justify-content:space-between;"><span>Current bankroll</span><span style="color:var(--amber)">₦${S.bankroll.toLocaleString()}</span></div>
+      <div style="display:flex;justify-content:space-between;"><span>Net P&L</span><span style="color:${net>=0?'var(--success)':'var(--danger)'}">${netSign}₦${Math.abs(net).toLocaleString()}</span></div>
+      <div style="display:flex;justify-content:space-between;"><span>Return on initial</span><span>${netSign}${((net/S.initialBankroll)*100).toFixed(2)}%</span></div>
+      <div style="border-top:1px solid var(--border);margin:6px 0;"></div>
+      <div style="display:flex;justify-content:space-between;"><span>Total cycles</span><span>${S.totalCycles}</span></div>
+      <div style="display:flex;justify-content:space-between;"><span>Successful cycles</span><span style="color:var(--success)">${S.successfulCycles}</span></div>
+      <div style="display:flex;justify-content:space-between;"><span>Cycle success rate</span><span>${wr}%</span></div>
+      <div style="display:flex;justify-content:space-between;"><span>Busts</span><span style="color:var(--danger)">${S.busts}</span></div>
+      <div style="border-top:1px solid var(--border);margin:6px 0;"></div>
+      <div style="display:flex;justify-content:space-between;"><span>Current round</span><span>Round ${S.round}</span></div>
+      <div style="display:flex;justify-content:space-between;"><span>Current profit target</span><span style="color:var(--amber)">₦${S.profitTarget.toLocaleString()}</span></div>
+      <div style="display:flex;justify-content:space-between;"><span>Current stake</span><span style="color:var(--amber)">₦${S.currentStake.toLocaleString()}</span></div>
+    </div>`;
+  document.getElementById('statsOverlay').classList.add('show');
+}
+
+function confirmReset() { document.getElementById('resetOverlay').classList.add('show'); }
+
+async function hardReset() {
+  try { await apiDelete(); } catch (_) {}
+  S = null;
+  document.getElementById('resetOverlay').classList.remove('show');
+  showScreen('setup');
+  document.getElementById('bankrollInput').value = '';
+  showToast('System reset. Enter new bankroll.');
+}
+
+async function clearHistory() {
+  if (!S) return;
+  try {
+    await apiClearHistory();
+    S.history = [];
+    renderHistory();
+    showToast('History cleared.');
+  } catch (e) { showToast(`⚠️ ${e.message}`); }
+}
+
+// ═══════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════
+
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('setup').classList.contains('active')) {
+    initSystem();
+  }
+});
+</script>
+</body>
+</html>
