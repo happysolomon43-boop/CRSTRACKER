@@ -730,15 +730,13 @@ const tg = window.Telegram && window.Telegram.WebApp;
 if (tg) {
   tg.ready();
   tg.expand();
-  // Match app background to Telegram theme
-  document.documentElement.style.setProperty('--bg', tg.themeParams.bg_color || '#1A0F06');
 }
 
 // ═══════════════════════════════════════════
-//  CONFIG — set this to your Railway URL
+//  CONFIG
 // ═══════════════════════════════════════════
 
-const API = 'https://campus-esports-elite-backend2-production.up.railway.app';
+const API = 'https://crstracker-production.up.railway.app';
 
 // ═══════════════════════════════════════════
 //  API CALLS
