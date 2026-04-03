@@ -197,15 +197,15 @@ async function recordNoGame() {
 //  TELEGRAM
 // ───────────────────────────────────────────
 
-async function sendTelegram(text) {
+async function sendTelegram(text, chatId = null) {
   const token  = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID;
-  if (!token || !chatId) { console.warn('[Telegram] Env vars not set.'); return false; }
+  const target = chatId || process.env.TELEGRAM_CHAT_ID;
+  if (!token || !target) { console.warn('[Telegram] Env vars not set.'); return false; }
 
   const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' }),
+    body:    JSON.stringify({ chat_id: target, text, parse_mode: 'HTML' }),
   });
 
   const data = await res.json();
@@ -364,4 +364,40 @@ app.post('/api/test-notify', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`CRS backend running on port ${PORT}`);
   startScheduler();
+});
+
+// ── Telegram Webhook — /start, /status, /stats
+app.post('/telegramWebhook', async (req, res) => {
+  res.status(200).send('OK');
+  try {
+    const message = req.body.message || req.body.edited_message;
+    if (!message) return;
+    const chatId = message.chat && message.chat.id;
+    const text   = (message.text || '').trim();
+    if (!chatId) return;
+
+    if (text.startsWith('/start')) {
+      await sendTelegram(
+        `👋 <b>CRS Tracker Bot</b>\n\nYou're connected.\n\nCommands:\n/status — current bankroll &amp; round\n/stats — full session stats`,
+        chatId
+      );
+    } else if (text === '/status') {
+      const state = await getState();
+      if (!state) { await sendTelegram('⚠️ No session found. Open the app and set your bankroll first.', chatId); return; }
+      const diff = state.bankroll - state.initialBankroll;
+      const sign = diff >= 0 ? '+' : '−';
+      await sendTelegram(
+        `📊 <b>CRS Status</b>\n\nBankroll: <b>₦${state.bankroll.toLocaleString()}</b>\nP&amp;L: ${sign}₦${Math.abs(diff).toLocaleString()}\nRound: ${state.round} / 3\nCurrent stake: ₦${state.currentStake.toLocaleString()}\nCycle: #${state.cycleNumber}`,
+        chatId
+      );
+    } else if (text === '/stats') {
+      const state = await getState();
+      if (!state) { await sendTelegram('⚠️ No session found.', chatId); return; }
+      const wr = state.totalCycles > 0 ? ((state.successfulCycles / state.totalCycles) * 100).toFixed(1) : '—';
+      await sendTelegram(
+        `📈 <b>CRS Full Stats</b>\n\nInitial bankroll: ₦${state.initialBankroll.toLocaleString()}\nCurrent bankroll: ₦${state.bankroll.toLocaleString()}\nTotal cycles: ${state.totalCycles}\nSuccessful cycles: ${state.successfulCycles}\nBusts: ${state.busts}\nWin rate: ${wr}%`,
+        chatId
+      );
+    }
+  } catch (e) { console.error('[CRS] telegramWebhook error:', e.message); }
 });
