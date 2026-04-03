@@ -27,527 +27,243 @@
   --danger-bd: rgba(224,92,58,.3);
   --warn:      #F5C842;
   --warn-bg:   #2B1E06;
+  --info:      #4A9EDB;
+  --info-bg:   #0A1F2B;
+  --info-bd:   rgba(74,158,219,.3);
   --text:      #FAF3E0;
   --text-dim:  rgba(250,243,224,.5);
   --text-faint:rgba(250,243,224,.28);
 }
-
 * { margin:0; padding:0; box-sizing:border-box; }
 html { scroll-behavior:smooth; }
+body { background:var(--bg); color:var(--text); font-family:'Source Serif 4',Georgia,serif; min-height:100vh; padding-bottom:60px; }
 
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Source Serif 4', Georgia, serif;
-  min-height: 100vh;
-  padding-bottom: 40px;
-}
-
-/* ─── SCREENS ─────────────────────────────── */
 .screen { display:none; }
 .screen.active { display:block; }
 
-/* ─── SETUP SCREEN ────────────────────────── */
-#setup {
-  min-height: 100vh;
-  display:flex; align-items:center; justify-content:center;
-  padding: 24px;
-}
-.setup-card {
-  background: var(--card);
-  border: 1px solid var(--border-hi);
-  border-radius: 20px;
-  padding: 50px 40px;
-  max-width: 420px;
-  width: 100%;
-  box-shadow: 0 0 60px rgba(232,160,32,.08);
-  animation: fadeUp .5s ease;
-}
-.setup-logo {
-  text-align: center;
-  margin-bottom: 36px;
-}
-.setup-logo .icon {
-  width: 64px; height: 64px;
-  background: linear-gradient(135deg, var(--rust), var(--amber));
-  border-radius: 16px;
-  display: flex; align-items:center; justify-content:center;
-  margin: 0 auto 16px;
-  font-size: 28px;
-  box-shadow: 0 8px 24px rgba(232,160,32,.25);
-}
-.setup-logo h1 {
-  font-family: 'Playfair Display', serif;
-  font-size: 28px;
-  font-weight: 900;
-  color: var(--amber-hi);
-  letter-spacing: -.3px;
-}
-.setup-logo p {
-  font-size: 13px;
-  color: var(--text-dim);
-  margin-top: 6px;
-}
-.field-label {
-  font-size: 11px;
-  letter-spacing: .18em;
-  text-transform: uppercase;
-  color: var(--amber);
-  margin-bottom: 10px;
-  font-weight: 600;
-}
-.bankroll-input-wrap {
-  position: relative;
-  margin-bottom: 28px;
-}
-.currency-sym {
-  position: absolute;
-  left: 18px; top: 50%;
-  transform: translateY(-50%);
-  font-family: 'Playfair Display', serif;
-  font-size: 22px;
-  color: var(--amber);
-  font-weight: 700;
-}
-#bankrollInput {
-  width: 100%;
-  background: var(--surface);
-  border: 2px solid var(--border-hi);
-  border-radius: 12px;
-  padding: 18px 18px 18px 44px;
-  font-family: 'Playfair Display', serif;
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--text);
-  outline: none;
-  transition: border-color .2s;
-  -moz-appearance: textfield;
-}
-#bankrollInput::-webkit-inner-spin-button,
-#bankrollInput::-webkit-outer-spin-button { -webkit-appearance: none; }
-#bankrollInput:focus { border-color: var(--amber); }
+/* ── SETUP ── */
+#setup { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+.setup-card { background:var(--card); border:1px solid var(--border-hi); border-radius:20px; padding:50px 40px; max-width:420px; width:100%; box-shadow:0 0 60px rgba(232,160,32,.08); animation:fadeUp .5s ease; }
+.setup-logo { text-align:center; margin-bottom:36px; }
+.setup-logo .icon { width:64px; height:64px; background:linear-gradient(135deg,var(--rust),var(--amber)); border-radius:16px; display:flex; align-items:center; justify-content:center; margin:0 auto 16px; font-size:28px; box-shadow:0 8px 24px rgba(232,160,32,.25); }
+.setup-logo h1 { font-family:'Playfair Display',serif; font-size:28px; font-weight:900; color:var(--amber-hi); }
+.setup-logo p { font-size:13px; color:var(--text-dim); margin-top:6px; }
+.field-label { font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--amber); margin-bottom:10px; font-weight:600; }
+.bankroll-input-wrap { position:relative; margin-bottom:28px; }
+.currency-sym { position:absolute; left:18px; top:50%; transform:translateY(-50%); font-family:'Playfair Display',serif; font-size:22px; color:var(--amber); font-weight:700; }
+#bankrollInput { width:100%; background:var(--surface); border:2px solid var(--border-hi); border-radius:12px; padding:18px 18px 18px 44px; font-family:'Playfair Display',serif; font-size:28px; font-weight:700; color:var(--text); outline:none; transition:border-color .2s; -moz-appearance:textfield; }
+#bankrollInput::-webkit-inner-spin-button,#bankrollInput::-webkit-outer-spin-button{-webkit-appearance:none}
+#bankrollInput:focus { border-color:var(--amber); }
+.setup-info { background:var(--amber-dim); border:1px solid var(--border-hi); border-radius:10px; padding:14px 16px; font-size:13px; color:var(--cream-dim); margin-bottom:28px; line-height:1.6; }
+.setup-info strong { color:var(--amber-hi); }
+.btn-primary { width:100%; background:linear-gradient(135deg,var(--rust),var(--amber)); color:var(--bg); font-family:'Playfair Display',serif; font-size:17px; font-weight:700; border:none; border-radius:12px; padding:18px; cursor:pointer; transition:opacity .2s,transform .15s; }
+.btn-primary:hover { opacity:.9; transform:translateY(-1px); }
 
-.setup-info {
-  background: var(--amber-dim);
-  border: 1px solid var(--border-hi);
-  border-radius: 10px;
-  padding: 14px 16px;
-  font-size: 13px;
-  color: var(--cream-dim);
-  margin-bottom: 28px;
-  line-height: 1.6;
-}
-.setup-info strong { color: var(--amber-hi); }
+/* ── MAIN ── */
+#main { max-width:480px; margin:0 auto; padding:0 16px; }
 
-.btn-primary {
-  width: 100%;
-  background: linear-gradient(135deg, var(--rust), var(--amber));
-  color: var(--bg);
-  font-family: 'Playfair Display', serif;
-  font-size: 17px;
-  font-weight: 700;
-  border: none;
-  border-radius: 12px;
-  padding: 18px;
-  cursor: pointer;
-  transition: opacity .2s, transform .15s;
-  letter-spacing: .03em;
-}
-.btn-primary:hover { opacity: .9; transform: translateY(-1px); }
-.btn-primary:active { transform: translateY(0); }
+.top-bar { display:flex; justify-content:space-between; align-items:center; padding:20px 0 16px; border-bottom:1px solid var(--border); margin-bottom:16px; }
+.top-bar-title { font-family:'Playfair Display',serif; font-size:20px; font-weight:900; color:var(--amber-hi); }
+.top-bar-sub { font-size:12px; color:var(--text-faint); margin-top:2px; }
+.top-bar-actions { display:flex; gap:8px; align-items:center; }
+.btn-icon { background:var(--card); border:1px solid var(--border); color:var(--text-dim); border-radius:8px; width:36px; height:36px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; transition:border-color .2s,color .2s; }
+.btn-icon:hover { border-color:var(--amber); color:var(--amber); }
 
-/* ─── MAIN SCREEN ─────────────────────────── */
-#main { max-width: 480px; margin: 0 auto; padding: 0 16px; }
+/* Pause button */
+.btn-pause { background:var(--card); border:1px solid var(--border); color:var(--text-dim); border-radius:8px; padding:0 12px; height:36px; display:flex; align-items:center; gap:6px; cursor:pointer; font-family:'Source Serif 4',serif; font-size:12px; transition:all .2s; white-space:nowrap; }
+.btn-pause:hover { border-color:var(--amber); color:var(--amber); }
+.btn-pause.paused { border-color:rgba(245,200,66,.5); color:var(--warn); background:rgba(43,30,6,.6); }
 
-/* Header */
-.top-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 0 16px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 20px;
-}
-.top-bar-title {
-  font-family: 'Playfair Display', serif;
-  font-size: 20px;
-  font-weight: 900;
-  color: var(--amber-hi);
-}
-.top-bar-sub { font-size: 12px; color: var(--text-faint); margin-top: 2px; }
-.btn-icon {
-  background: var(--card);
-  border: 1px solid var(--border);
-  color: var(--text-dim);
-  border-radius: 8px;
-  width: 36px; height: 36px;
-  display:flex; align-items:center; justify-content:center;
-  cursor: pointer;
-  font-size: 16px;
-  transition: border-color .2s, color .2s;
-}
-.btn-icon:hover { border-color: var(--amber); color: var(--amber); }
+/* Banners */
+.banner { border-radius:12px; padding:14px 16px; margin-bottom:12px; display:none; font-size:13px; line-height:1.5; gap:10px; align-items:flex-start; }
+.banner.show { display:flex; }
+.banner .bi { font-size:20px; flex-shrink:0; }
+.banner-warn { background:var(--warn-bg); border:1px solid rgba(245,200,66,.4); color:var(--warn); }
+.banner-danger { background:var(--danger-bg); border:1px solid var(--danger-bd); color:var(--danger); }
+.banner-info  { background:var(--info-bg);  border:1px solid var(--info-bd);  color:var(--info); }
 
 /* Bankroll card */
-.bankroll-card {
-  background: linear-gradient(135deg, var(--rust) 0%, #7A2E08 50%, var(--bg) 100%);
-  border-radius: 18px;
-  padding: 26px 24px;
-  margin-bottom: 16px;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 4px 32px rgba(196,94,26,.2);
-}
-.bankroll-card::before {
-  content: '';
-  position: absolute; inset: 0;
-  background: repeating-linear-gradient(45deg, transparent, transparent 30px, rgba(255,255,255,.02) 30px, rgba(255,255,255,.02) 60px);
-}
-.bk-label {
-  font-size: 11px; letter-spacing:.18em; text-transform:uppercase;
-  color: rgba(250,243,224,.6); position:relative;
-}
-.bk-amount {
-  font-family:'Playfair Display',serif;
-  font-size: clamp(36px, 10vw, 52px);
-  font-weight: 900;
-  color: var(--amber-hi);
-  position: relative;
-  line-height: 1.1;
-  margin: 6px 0 4px;
-}
-.bk-amount .sym { font-size: 0.55em; vertical-align: top; margin-top: 8px; display: inline-block; }
-.bk-delta {
-  font-size: 13px;
-  position: relative;
-  color: rgba(250,243,224,.6);
-}
-.bk-delta.pos { color: var(--success); }
-.bk-delta.neg { color: var(--danger); }
+.bankroll-card { background:linear-gradient(135deg,var(--rust) 0%,#7A2E08 50%,var(--bg) 100%); border-radius:18px; padding:26px 24px; margin-bottom:16px; position:relative; overflow:hidden; box-shadow:0 4px 32px rgba(196,94,26,.2); }
+.bankroll-card::before { content:''; position:absolute; inset:0; background:repeating-linear-gradient(45deg,transparent,transparent 30px,rgba(255,255,255,.02) 30px,rgba(255,255,255,.02) 60px); }
+.bk-label { font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:rgba(250,243,224,.6); position:relative; }
+.bk-amount { font-family:'Playfair Display',serif; font-size:clamp(36px,10vw,52px); font-weight:900; color:var(--amber-hi); position:relative; line-height:1.1; margin:6px 0 4px; }
+.bk-amount .sym { font-size:.55em; vertical-align:top; margin-top:8px; display:inline-block; }
+.bk-delta { font-size:13px; position:relative; color:rgba(250,243,224,.6); }
+.bk-delta.pos { color:var(--success); }
+.bk-delta.neg { color:var(--danger); }
 
-/* Round indicator */
-.round-track {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 18px 20px;
-  margin-bottom: 16px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-.round-dots {
-  display: flex; gap: 8px;
-}
-.rdot {
-  width: 14px; height: 14px;
-  border-radius: 50%;
-  background: var(--surface);
-  border: 2px solid rgba(232,160,32,.2);
-  transition: all .3s;
-}
-.rdot.active { background: var(--amber); border-color: var(--amber); box-shadow: 0 0 10px rgba(232,160,32,.4); }
-.rdot.lost { background: var(--danger); border-color: var(--danger); }
-.round-info { flex: 1; }
-.round-label { font-size: 11px; letter-spacing:.15em; text-transform:uppercase; color:var(--text-faint); }
-.round-text {
-  font-family: 'Playfair Display', serif;
-  font-size: 17px; font-weight: 700;
-  color: var(--text);
-  margin-top: 3px;
-}
+/* Round tracker */
+.round-track { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px 20px; margin-bottom:16px; display:flex; align-items:center; gap:16px; }
+.round-dots { display:flex; gap:8px; }
+.rdot { width:14px; height:14px; border-radius:50%; background:var(--surface); border:2px solid rgba(232,160,32,.2); transition:all .3s; }
+.rdot.active { background:var(--amber); border-color:var(--amber); box-shadow:0 0 10px rgba(232,160,32,.4); }
+.rdot.lost { background:var(--danger); border-color:var(--danger); }
+.round-info { flex:1; }
+.round-label { font-size:11px; letter-spacing:.15em; text-transform:uppercase; color:var(--text-faint); }
+.round-text { font-family:'Playfair Display',serif; font-size:17px; font-weight:700; color:var(--text); margin-top:3px; }
 
 /* Stake card */
-.stake-card {
-  background: var(--card);
-  border: 2px solid var(--border-hi);
-  border-radius: 18px;
-  padding: 24px 22px;
-  margin-bottom: 16px;
-  text-align: center;
-  position: relative;
-}
-.stake-label {
-  font-size: 11px; letter-spacing:.18em; text-transform:uppercase;
-  color: var(--amber); font-weight:600; margin-bottom:10px;
-}
-.stake-amount {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(42px, 12vw, 64px);
-  font-weight: 900;
-  color: var(--amber-hi);
-  line-height: 1;
-}
-.stake-amount .sym { font-size: .5em; vertical-align: top; margin-top: 10px; display:inline-block; }
-.stake-sub {
-  font-size: 13px;
-  color: var(--text-dim);
-  margin-top: 10px;
-}
-.stake-sub span { color: var(--amber); font-weight: 600; }
+.stake-card { background:var(--card); border:2px solid var(--border-hi); border-radius:18px; padding:24px 22px; margin-bottom:16px; text-align:center; position:relative; }
+.stake-label { font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--amber); font-weight:600; margin-bottom:10px; }
+.stake-amount { font-family:'Playfair Display',serif; font-size:clamp(42px,12vw,64px); font-weight:900; color:var(--amber-hi); line-height:1; }
+.stake-amount .sym { font-size:.5em; vertical-align:top; margin-top:10px; display:inline-block; }
+.stake-sub { font-size:13px; color:var(--text-dim); margin-top:10px; }
+.stake-sub span { color:var(--amber); font-weight:600; }
+
+/* ── GAME SCHEDULER ── */
+.scheduler-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px 18px 14px; margin-bottom:16px; }
+.scheduler-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+.scheduler-title { font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--amber); font-weight:600; }
+.btn-sch-action { background:none; border:1px solid var(--border-hi); border-radius:8px; padding:5px 12px; font-size:12px; color:var(--amber); cursor:pointer; font-family:'Source Serif 4',serif; transition:all .2s; }
+.btn-sch-action:hover { background:var(--amber-dim); }
+.btn-sch-action.danger { border-color:var(--danger-bd); color:var(--danger); }
+.btn-sch-action.danger:hover { background:var(--danger-bg); }
+
+/* Legs selector */
+.legs-row { display:flex; gap:8px; margin-bottom:14px; align-items:center; }
+.legs-label { font-size:11px; color:var(--text-faint); letter-spacing:.08em; white-space:nowrap; }
+.legs-pills { display:flex; gap:6px; flex-wrap:wrap; }
+.pill { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:5px 14px; font-size:13px; color:var(--text-dim); cursor:pointer; transition:all .2s; font-family:'Source Serif 4',serif; }
+.pill.active { background:var(--amber-dim); border-color:var(--border-hi); color:var(--amber-hi); font-weight:600; }
+
+/* Game fields */
+.game-field { display:grid; grid-template-columns:auto 1fr 1fr; gap:10px; align-items:center; margin-bottom:10px; }
+.game-num { font-family:'DM Mono',monospace; font-size:11px; color:var(--text-faint); width:20px; text-align:center; }
+.field-input { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:10px 12px; font-size:15px; color:var(--text); outline:none; width:100%; font-family:'DM Mono',monospace; transition:border-color .2s; }
+.field-input:focus { border-color:var(--amber); }
+.field-input::placeholder { color:var(--text-faint); font-size:13px; }
+
+/* Time input wrapper */
+.time-wrap { position:relative; }
+.time-wrap .field-input { padding-right:36px; }
+.time-scroll-btn { position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-faint); cursor:pointer; font-size:14px; padding:4px; }
+.time-scroll-btn:hover { color:var(--amber); }
+
+/* Odds result display */
+.odds-result { background:var(--surface); border:1px solid var(--border-hi); border-radius:10px; padding:12px 14px; margin:10px 0; }
+.odds-result-row { display:flex; justify-content:space-between; font-size:13px; color:var(--text-dim); margin-bottom:4px; }
+.odds-result-row:last-child { margin-bottom:0; }
+.odds-result-row .val { font-family:'DM Mono',monospace; color:var(--text); }
+.odds-result-row .val.hi { color:var(--amber-hi); font-weight:700; font-size:15px; }
+.btn-save-schedule { width:100%; background:linear-gradient(135deg,var(--rust),var(--amber)); color:var(--bg); font-family:'Playfair Display',serif; font-size:15px; font-weight:700; border:none; border-radius:10px; padding:14px; cursor:pointer; margin-top:10px; transition:opacity .2s; }
+.btn-save-schedule:hover { opacity:.9; }
+
+/* Scheduled display */
+.sched-display { font-size:13px; color:var(--text-dim); }
+.sched-game-row { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--border); }
+.sched-game-row:last-of-type { border-bottom:none; }
+.sched-game-label { color:var(--text-faint); font-size:12px; }
+.sched-game-val { font-family:'DM Mono',monospace; color:var(--text); }
+.sched-odds-summary { margin-top:10px; background:var(--amber-dim); border:1px solid var(--border-hi); border-radius:8px; padding:10px 12px; display:flex; justify-content:space-between; align-items:center; }
+.sched-odds-label { font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--amber); }
+.sched-odds-val { font-family:'Playfair Display',serif; font-size:22px; font-weight:900; color:var(--amber-hi); }
+.sched-result-badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; }
+.sched-result-badge.pending { background:rgba(74,158,219,.15); color:var(--info); border:1px solid var(--info-bd); }
+.sched-result-badge.done    { background:var(--success-bg); color:var(--success); border:1px solid var(--success-bd); }
 
 /* Action buttons */
-.action-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  margin-bottom: 16px;
-}
-.btn-win, .btn-loss {
-  border: none;
-  border-radius: 16px;
-  padding: 22px 12px;
-  font-family: 'Playfair Display', serif;
-  font-size: 20px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform .15s, box-shadow .2s, opacity .15s;
-  letter-spacing: .02em;
-  display: flex; flex-direction:column; align-items:center; gap: 6px;
-}
-.btn-win {
-  background: linear-gradient(135deg, #1E5C34, var(--success));
-  color: #fff;
-  box-shadow: 0 4px 20px rgba(76,175,114,.2);
-}
-.btn-loss {
-  background: linear-gradient(135deg, #5C1A0A, var(--danger));
-  color: #fff;
-  box-shadow: 0 4px 20px rgba(224,92,58,.2);
-}
-.btn-win:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(76,175,114,.35); }
-.btn-loss:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(224,92,58,.35); }
-.btn-win:active, .btn-loss:active { transform: translateY(0); }
-.btn-win .btn-icon-emoji, .btn-loss .btn-icon-emoji { font-size: 26px; }
-.btn-win .btn-sub, .btn-loss .btn-sub { font-size: 11px; font-family:'Source Serif 4',serif; letter-spacing:.1em; opacity:.8; }
+.action-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px; }
+.btn-win,.btn-loss { border:none; border-radius:16px; padding:22px 12px; font-family:'Playfair Display',serif; font-size:20px; font-weight:700; cursor:pointer; transition:transform .15s,box-shadow .2s,opacity .15s; display:flex; flex-direction:column; align-items:center; gap:6px; }
+.btn-win  { background:linear-gradient(135deg,#1E5C34,var(--success)); color:#fff; box-shadow:0 4px 20px rgba(76,175,114,.2); }
+.btn-loss { background:linear-gradient(135deg,#5C1A0A,var(--danger));  color:#fff; box-shadow:0 4px 20px rgba(224,92,58,.2); }
+.btn-win:hover  { transform:translateY(-2px); box-shadow:0 8px 28px rgba(76,175,114,.35); }
+.btn-loss:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(224,92,58,.35); }
+.btn-win:active,.btn-loss:active { transform:translateY(0); }
+.btn-win .btn-icon-emoji,.btn-loss .btn-icon-emoji { font-size:26px; }
+.btn-win .btn-sub,.btn-loss .btn-sub { font-size:11px; font-family:'Source Serif 4',serif; letter-spacing:.1em; opacity:.8; }
+.btn-win:disabled,.btn-loss:disabled { opacity:.35; cursor:not-allowed; transform:none; }
 
-/* Warning banner */
-.warning-banner {
-  background: var(--warn-bg);
-  border: 1px solid rgba(245,200,66,.4);
-  border-radius: 12px;
-  padding: 14px 16px;
-  margin-bottom: 16px;
-  display: none;
-  font-size: 14px;
-  color: var(--warn);
-  line-height: 1.5;
-}
-.warning-banner.show { display: flex; gap: 10px; align-items:flex-start; }
-.warning-banner .wi { font-size: 20px; flex-shrink:0; }
+/* No game / test / reset */
+.btn-no-game { width:100%; background:transparent; border:1px dashed rgba(250,243,224,.25); border-radius:14px; padding:14px; color:var(--text-faint); font-family:'Source Serif 4',serif; font-size:14px; cursor:pointer; transition:all .2s; margin-bottom:16px; }
+.btn-no-game:hover { border-color:rgba(250,243,224,.45); color:var(--cream-dim); background:rgba(250,243,224,.04); }
+.btn-no-game:disabled { opacity:.35; cursor:not-allowed; }
+.btn-test-notify { width:100%; background:transparent; border:1px solid rgba(232,160,32,.2); border-radius:10px; padding:11px; font-family:'Source Serif 4',serif; font-size:12px; cursor:pointer; transition:all .2s; margin-bottom:8px; color:rgba(232,160,32,.5); }
+.btn-test-notify:hover { border-color:var(--border-hi); color:var(--amber); }
 
 /* Stats strip */
-.stats-strip {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-bottom: 16px;
-}
-.stat-mini {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 14px 10px;
-  text-align: center;
-}
-.stat-mini .sm-val {
-  font-family: 'Playfair Display', serif;
-  font-size: 22px; font-weight: 700;
-  color: var(--amber-hi);
-  line-height: 1;
-}
-.stat-mini .sm-lbl {
-  font-size: 10px; letter-spacing:.12em; text-transform:uppercase;
-  color: var(--text-faint); margin-top: 5px;
-}
+.stats-strip { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:16px; }
+.stat-mini { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:12px 6px; text-align:center; }
+.stat-mini .sm-val { font-family:'Playfair Display',serif; font-size:20px; font-weight:700; color:var(--amber-hi); line-height:1; }
+.stat-mini .sm-lbl { font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-faint); margin-top:4px; }
 
-/* History section */
-.history-header {
-  display: flex; justify-content:space-between; align-items:center;
-  margin-bottom: 12px;
-  margin-top: 20px;
-}
-.history-title {
-  font-size: 12px; letter-spacing:.18em; text-transform:uppercase;
-  color: var(--amber); font-weight:600;
-}
-.btn-clear {
-  font-size: 11px; color: var(--text-faint);
-  background: none; border: 1px solid var(--border);
-  border-radius: 6px; padding: 4px 10px; cursor:pointer;
-  font-family:'Source Serif 4',serif;
-  transition: color .2s, border-color .2s;
-}
-.btn-clear:hover { color: var(--danger); border-color: var(--danger-bd); }
-
+/* History */
+.history-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; margin-top:20px; }
+.history-title { font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--amber); font-weight:600; }
+.btn-clear { font-size:11px; color:var(--text-faint); background:none; border:1px solid var(--border); border-radius:6px; padding:4px 10px; cursor:pointer; font-family:'Source Serif 4',serif; transition:all .2s; }
+.btn-clear:hover { color:var(--danger); border-color:var(--danger-bd); }
 .history-list { display:flex; flex-direction:column; gap:8px; }
-.hist-empty {
-  text-align:center; color:var(--text-faint); font-size:14px;
-  font-style:italic; padding: 28px 0;
-}
-.hist-item {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 14px 16px;
-  display: flex; justify-content:space-between; align-items:center;
-  animation: fadeUp .3s ease;
-}
-.hist-item.win-item { border-color: var(--success-bd); }
-.hist-item.loss-item { border-color: var(--danger-bd); }
-.hist-item.bust-item { border-color: rgba(155,58,16,.5); background: var(--danger-bg); }
+.hist-empty { text-align:center; color:var(--text-faint); font-size:14px; font-style:italic; padding:28px 0; }
+.hist-item { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px 16px; display:flex; justify-content:space-between; align-items:center; animation:fadeUp .3s ease; }
+.hist-item.win-item   { border-color:var(--success-bd); }
+.hist-item.loss-item  { border-color:var(--danger-bd); }
+.hist-item.bust-item  { border-color:rgba(155,58,16,.5); background:var(--danger-bg); }
+.hist-item.nogame-item{ border-color:rgba(250,243,224,.08); opacity:.65; }
 .hist-left { display:flex; flex-direction:column; gap:3px; }
-.hist-cycle { font-size: 11px; color:var(--text-faint); letter-spacing:.08em; }
-.hist-desc { font-size: 14px; color: var(--text); font-weight:600; }
+.hist-cycle { font-size:11px; color:var(--text-faint); letter-spacing:.08em; }
+.hist-desc  { font-size:14px; color:var(--text); font-weight:600; }
 .hist-right { text-align:right; }
-.hist-amount {
-  font-family:'Playfair Display',serif; font-size:16px; font-weight:700;
-}
+.hist-amount { font-family:'Playfair Display',serif; font-size:16px; font-weight:700; }
 .hist-amount.pos { color:var(--success); }
 .hist-amount.neg { color:var(--danger); }
 .hist-bk { font-size:11px; color:var(--text-faint); margin-top:2px; }
 
 /* Toast */
-.toast {
-  position: fixed; bottom: 30px; left:50%; transform:translateX(-50%) translateY(80px);
-  background: var(--card);
-  border: 1px solid var(--border-hi);
-  border-radius: 12px;
-  padding: 14px 24px;
-  font-size: 15px;
-  color: var(--text);
-  box-shadow: 0 8px 32px rgba(0,0,0,.4);
-  transition: transform .35s cubic-bezier(.34,1.56,.64,1), opacity .35s;
-  opacity: 0;
-  z-index: 999;
-  white-space: nowrap;
-  max-width: 90vw;
-  text-align: center;
-}
+.toast { position:fixed; bottom:30px; left:50%; transform:translateX(-50%) translateY(80px); background:var(--card); border:1px solid var(--border-hi); border-radius:12px; padding:14px 24px; font-size:15px; color:var(--text); box-shadow:0 8px 32px rgba(0,0,0,.4); transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .35s; opacity:0; z-index:999; white-space:nowrap; max-width:90vw; text-align:center; }
 .toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
 
 /* Overlay / modal */
-.overlay {
-  position:fixed; inset:0;
-  background:rgba(0,0,0,.75);
-  display:none; align-items:center; justify-content:center;
-  z-index:100; padding: 24px;
-}
+.overlay { position:fixed; inset:0; background:rgba(0,0,0,.75); display:none; align-items:center; justify-content:center; z-index:100; padding:24px; }
 .overlay.show { display:flex; }
-.modal {
-  background: var(--card);
-  border: 1px solid var(--border-hi);
-  border-radius: 20px;
-  padding: 32px 28px;
-  max-width: 360px; width:100%;
-  animation: fadeUp .3s ease;
-  box-shadow: 0 0 60px rgba(232,160,32,.1);
-}
-.modal h3 {
-  font-family:'Playfair Display',serif;
-  font-size:22px; font-weight:900;
-  margin-bottom: 10px;
-}
-.modal h3.red { color:var(--danger); }
+.modal { background:var(--card); border:1px solid var(--border-hi); border-radius:20px; padding:32px 28px; max-width:360px; width:100%; animation:fadeUp .3s ease; box-shadow:0 0 60px rgba(232,160,32,.1); }
+.modal h3 { font-family:'Playfair Display',serif; font-size:22px; font-weight:900; margin-bottom:10px; }
+.modal h3.red   { color:var(--danger); }
 .modal h3.amber { color:var(--amber-hi); }
 .modal p { font-size:14px; color:var(--text-dim); line-height:1.6; margin-bottom:20px; }
 .modal-row { display:flex; gap:12px; }
-.btn-modal {
-  flex:1; padding:14px; border-radius:12px;
-  font-family:'Playfair Display',serif; font-size:15px; font-weight:700;
-  border:none; cursor:pointer; transition:opacity .2s;
-}
+.btn-modal { flex:1; padding:14px; border-radius:12px; font-family:'Playfair Display',serif; font-size:15px; font-weight:700; border:none; cursor:pointer; transition:opacity .2s; }
 .btn-modal:hover { opacity:.85; }
-.btn-modal.confirm { background: var(--danger); color:#fff; }
-.btn-modal.cancel { background: var(--surface); color:var(--text-dim); border:1px solid var(--border); }
-.btn-modal.ok { background: linear-gradient(135deg,var(--rust),var(--amber)); color:var(--bg); }
-
-/* Bust celebration/mourning */
-.bust-details {
-  background: var(--danger-bg);
-  border: 1px solid var(--danger-bd);
-  border-radius: 10px;
-  padding: 14px 16px;
-  margin: 14px 0;
-  font-size: 13px; color:var(--text-dim); line-height:1.7;
-}
+.btn-modal.confirm { background:var(--danger); color:#fff; }
+.btn-modal.cancel  { background:var(--surface); color:var(--text-dim); border:1px solid var(--border); }
+.btn-modal.ok      { background:linear-gradient(135deg,var(--rust),var(--amber)); color:var(--bg); }
+.bust-details { background:var(--danger-bg); border:1px solid var(--danger-bd); border-radius:10px; padding:14px 16px; margin:14px 0; font-size:13px; color:var(--text-dim); line-height:1.7; }
 .bust-details .row { display:flex; justify-content:space-between; }
 .bust-details .row span:last-child { color:var(--text); font-weight:600; }
 
-/* Animations */
-@keyframes fadeUp {
-  from { opacity:0; transform:translateY(16px); }
-  to   { opacity:1; transform:translateY(0); }
-}
-@keyframes pulse {
-  0%,100% { box-shadow: 0 0 0 0 rgba(232,160,32,.4); }
-  50%      { box-shadow: 0 0 0 10px rgba(232,160,32,0); }
-}
-.pulse { animation: pulse 2s infinite; }
+/* Time scroll picker overlay */
+.time-picker-overlay { position:fixed; inset:0; background:rgba(0,0,0,.75); display:none; align-items:flex-end; justify-content:center; z-index:200; }
+.time-picker-overlay.show { display:flex; }
+.time-picker-sheet { background:var(--card); border:1px solid var(--border-hi); border-radius:20px 20px 0 0; padding:20px 24px 36px; width:100%; max-width:480px; animation:slideUp .3s ease; }
+.tps-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+.tps-title { font-family:'Playfair Display',serif; font-size:17px; font-weight:700; color:var(--amber-hi); }
+.tps-target { font-size:12px; color:var(--text-faint); }
+.tps-close { background:none; border:none; color:var(--text-faint); cursor:pointer; font-size:20px; }
+.tps-cols { display:flex; gap:12px; justify-content:center; }
+.tps-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; }
+.tps-col-label { font-size:10px; letter-spacing:.15em; text-transform:uppercase; color:var(--text-faint); margin-bottom:6px; }
+.tps-scroll { height:200px; overflow-y:scroll; scroll-snap-type:y mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none; width:100%; }
+.tps-scroll::-webkit-scrollbar { display:none; }
+.tps-item { scroll-snap-align:center; height:44px; display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:20px; color:var(--text-faint); cursor:pointer; transition:color .15s; border-radius:8px; }
+.tps-item.selected { color:var(--amber-hi); font-weight:700; background:var(--amber-dim); }
+.tps-confirm { width:100%; background:linear-gradient(135deg,var(--rust),var(--amber)); color:var(--bg); font-family:'Playfair Display',serif; font-size:16px; font-weight:700; border:none; border-radius:12px; padding:16px; cursor:pointer; margin-top:16px; }
+.tps-confirm:hover { opacity:.9; }
 
-/* Scrollbar */
+/* Reset button */
+.btn-reset-link { background:none; border:none; font-size:12px; color:var(--text-faint); cursor:pointer; text-decoration:underline; font-family:'Source Serif 4',serif; }
+.btn-reset-link:hover { color:var(--danger); }
+
+@keyframes fadeUp  { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+@keyframes pulse   { 0%,100%{box-shadow:0 0 0 0 rgba(232,160,32,.4)} 50%{box-shadow:0 0 0 10px rgba(232,160,32,0)} }
+.pulse { animation:pulse 2s infinite; }
 ::-webkit-scrollbar { width:4px; }
 ::-webkit-scrollbar-track { background:transparent; }
 ::-webkit-scrollbar-thumb { background:var(--border-hi); border-radius:4px; }
-
-/* Reset confirm button */
-.btn-reset-link {
-  background:none; border:none;
-  font-size:12px; color:var(--text-faint);
-  cursor:pointer; text-decoration:underline;
-  font-family:'Source Serif 4',serif;
-  padding:0;
-}
-.btn-reset-link:hover { color:var(--danger); }
-
-@media(max-width:400px){
-  .stake-amount { font-size: 38px; }
-  .bk-amount { font-size: 34px; }
-}
-
-/* No Game Today button */
-.btn-no-game {
-  width: 100%;
-  background: transparent;
-  border: 1px dashed rgba(250,243,224,.25);
-  border-radius: 14px;
-  padding: 14px;
-  color: var(--text-faint);
-  font-family: 'Source Serif 4', serif;
-  font-size: 14px;
-  cursor: pointer;
-  transition: border-color .2s, color .2s, background .2s;
-  margin-bottom: 16px;
-  letter-spacing: .03em;
-}
-.btn-no-game:hover { border-color: rgba(250,243,224,.45); color: var(--cream-dim); background: rgba(250,243,224,.04); }
-.btn-no-game:disabled { opacity: .35; cursor: not-allowed; }
-
-/* Test notify button */
-.btn-test-notify {
-  width: 100%;
-  background: transparent;
-  border: 1px solid rgba(232,160,32,.2);
-  border-radius: 10px;
-  padding: 11px;
-  color: var(--amber-dim);
-  font-family: 'Source Serif 4', serif;
-  font-size: 12px;
-  cursor: pointer;
-  transition: border-color .2s, color .2s;
-  margin-bottom: 8px;
-  letter-spacing: .05em;
-  color: rgba(232,160,32,.5);
-}
-.btn-test-notify:hover { border-color: var(--border-hi); color: var(--amber); }
-
-/* No-game history item */
-.hist-item.nogame-item { border-color: rgba(250,243,224,.08); opacity: .65; }
+@media(max-width:400px){ .stake-amount{font-size:38px} .bk-amount{font-size:34px} .stats-strip{grid-template-columns:repeat(2,1fr)} }
 </style>
 </head>
 <body>
 
-<!-- ═══════════ SETUP SCREEN ═══════════ -->
+<!-- ═══════════ SETUP ═══════════ -->
 <div id="setup" class="screen active">
   <div class="setup-card">
     <div class="setup-logo">
@@ -555,22 +271,19 @@ body {
       <h1>CRS Tracker</h1>
       <p>Compound Recovery System — Automated</p>
     </div>
-
     <div class="field-label">Enter Your Starting Bankroll</div>
     <div class="bankroll-input-wrap">
       <span class="currency-sym">₦</span>
       <input type="number" id="bankrollInput" placeholder="10000" min="2001" step="100">
     </div>
-
     <div class="setup-info">
-      <strong>You only do this once.</strong> The system will remember your bankroll, track every bet, and always tell you exactly what to stake next. Just tap Win or Loss each day.
+      <strong>You only do this once.</strong> The system remembers your bankroll, tracks every bet, and always tells you exactly what to stake next.
     </div>
-
     <button class="btn-primary" onclick="initSystem()">Start Tracking →</button>
   </div>
 </div>
 
-<!-- ═══════════ MAIN SCREEN ═══════════ -->
+<!-- ═══════════ MAIN ═══════════ -->
 <div id="main" class="screen">
 
   <div class="top-bar">
@@ -578,15 +291,28 @@ body {
       <div class="top-bar-title">CRS Tracker</div>
       <div class="top-bar-sub" id="dateLabel">—</div>
     </div>
-    <div style="display:flex;gap:8px;">
+    <div class="top-bar-actions">
+      <button class="btn-pause" id="pauseBtn" onclick="togglePause()">⏸ Pause</button>
       <button class="btn-icon" onclick="showStats()" title="Stats">📊</button>
       <button class="btn-icon" onclick="confirmReset()" title="Reset">↺</button>
     </div>
   </div>
 
-  <!-- Warning banner -->
-  <div class="warning-banner" id="warnBanner">
-    <span class="wi">⚠️</span>
+  <!-- Pending result banner -->
+  <div class="banner banner-danger" id="pendingBanner">
+    <span class="bi">⚠️</span>
+    <span>Yesterday's games were never logged. Enter the result below before logging today.</span>
+  </div>
+
+  <!-- Missed day banner -->
+  <div class="banner banner-info" id="missedBanner">
+    <span class="bi">📅</span>
+    <span id="missedText">A previous day was missed. Your streak has been reset.</span>
+  </div>
+
+  <!-- Low bankroll warning -->
+  <div class="banner banner-warn" id="warnBanner">
+    <span class="bi">⚠️</span>
     <span id="warnText"></span>
   </div>
 
@@ -610,16 +336,43 @@ body {
     </div>
   </div>
 
-  <!-- Stake display -->
+  <!-- Stake card -->
   <div class="stake-card pulse" id="stakeCard">
     <div class="stake-label">Stake This Bet</div>
     <div class="stake-amount"><span class="sym">₦</span><span id="stakeAmt">0</span></div>
     <div class="stake-sub" id="stakeSub">—</div>
   </div>
 
-  <!-- Win / Loss buttons -->
+  <!-- ═══ GAME SCHEDULER ═══ -->
+  <div class="scheduler-card" id="schedulerCard">
+    <div class="scheduler-header">
+      <div class="scheduler-title">Today's Games</div>
+      <div id="schHeaderActions">
+        <button class="btn-sch-action" id="btnSetGames" onclick="openScheduler()">+ Set Games</button>
+      </div>
+    </div>
+    <div id="schDisplay" style="display:none"></div>
+    <div id="schForm" style="display:none">
+      <div class="legs-row">
+        <span class="legs-label">Legs:</span>
+        <div class="legs-pills" id="legsPills"></div>
+      </div>
+      <div id="gameFields"></div>
+      <div class="odds-result" id="oddsResult" style="display:none">
+        <div class="odds-result-row"><span>Raw odds</span><span class="val" id="orRaw">—</span></div>
+        <div class="odds-result-row"><span>Qualifying legs</span><span class="val" id="orLegs">—</span></div>
+        <div class="odds-result-row"><span>SportyBet bonus</span><span class="val" id="orBonus">—</span></div>
+        <div class="odds-result-row"><span>Effective odds</span><span class="val" id="orEffective">—</span></div>
+        <div class="odds-result-row"><span>Rounded odds</span><span class="val hi" id="orRounded">—</span></div>
+      </div>
+      <button class="btn-save-schedule" onclick="saveSchedule()">💾 Save Schedule</button>
+      <button class="btn-sch-action danger" style="width:100%;margin-top:8px" onclick="closeScheduler()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Win / Loss -->
   <div class="action-row">
-    <button class="btn-win" id="btnWin" onclick="recordResult('win')">
+    <button class="btn-win"  id="btnWin"  onclick="recordResult('win')">
       <span class="btn-icon-emoji">✅</span>
       <span>WIN</span>
       <span class="btn-sub">Bet came through</span>
@@ -631,30 +384,20 @@ body {
     </button>
   </div>
 
-  <!-- No Game Today -->
   <button class="btn-no-game" id="btnNoGame" onclick="recordNoGameToday()">
     🚫 &nbsp;No Game Today
   </button>
 
-  <!-- Test Telegram -->
   <button class="btn-test-notify" onclick="testNotify()">
     🔔 &nbsp;Send test Telegram notification
   </button>
 
   <!-- Stats strip -->
   <div class="stats-strip">
-    <div class="stat-mini">
-      <div class="sm-val" id="statCycles">0</div>
-      <div class="sm-lbl">Cycles</div>
-    </div>
-    <div class="stat-mini">
-      <div class="sm-val" id="statWins" style="color:var(--success)">0</div>
-      <div class="sm-lbl">Won</div>
-    </div>
-    <div class="stat-mini">
-      <div class="sm-val" id="statBusts" style="color:var(--danger)">0</div>
-      <div class="sm-lbl">Busts</div>
-    </div>
+    <div class="stat-mini"><div class="sm-val" id="statCycles">0</div><div class="sm-lbl">Cycles</div></div>
+    <div class="stat-mini"><div class="sm-val" id="statWins" style="color:var(--success)">0</div><div class="sm-lbl">Won</div></div>
+    <div class="stat-mini"><div class="sm-val" id="statBusts" style="color:var(--danger)">0</div><div class="sm-lbl">Busts</div></div>
+    <div class="stat-mini"><div class="sm-val" id="statStreak" style="color:var(--amber)">0</div><div class="sm-lbl">Streak 🔥</div></div>
   </div>
 
   <!-- History -->
@@ -666,55 +409,78 @@ body {
     <div class="hist-empty">No bets recorded yet.<br>Your history will appear here.</div>
   </div>
 
-  <div style="text-align:center; margin-top:28px;">
-    <button class="btn-reset-link" onclick="confirmReset()">Reset & start over</button>
+  <div style="text-align:center;margin-top:28px;">
+    <button class="btn-reset-link" onclick="confirmReset()">Reset &amp; start over</button>
   </div>
-
 </div>
 
-<!-- ═══════════ BUST MODAL ═══════════ -->
+<!-- Bust modal -->
 <div class="overlay" id="bustOverlay">
   <div class="modal">
     <h3 class="red">💥 Bust — Cycle Failed</h3>
-    <p>All 3 rounds in this cycle lost. You accept the loss and reset. The system automatically scales your new stakes down to match your reduced bankroll.</p>
+    <p>All 3 rounds lost. The system scales your new stakes down to match your reduced bankroll.</p>
     <div class="bust-details" id="bustDetails"></div>
-    <div class="modal-row">
-      <button class="btn-modal ok" onclick="closeBust()">Got it — Reset Cycle</button>
-    </div>
+    <div class="modal-row"><button class="btn-modal ok" onclick="closeBust()">Got it — Reset Cycle</button></div>
   </div>
 </div>
 
-<!-- ═══════════ WIN MODAL ═══════════ -->
+<!-- Win modal -->
 <div class="overlay" id="winOverlay">
   <div class="modal">
     <h3 class="amber" id="winModalTitle">✅ Cycle Complete!</h3>
     <p id="winModalMsg">—</p>
-    <div class="modal-row">
-      <button class="btn-modal ok" onclick="closeWin()">Next Cycle →</button>
-    </div>
+    <div class="modal-row"><button class="btn-modal ok" onclick="closeWin()">Next Cycle →</button></div>
   </div>
 </div>
 
-<!-- ═══════════ STATS MODAL ═══════════ -->
+<!-- Stats modal -->
 <div class="overlay" id="statsOverlay">
   <div class="modal">
     <h3 class="amber">📊 Full Stats</h3>
-    <div id="statsContent" style="font-size:14px; color:var(--text-dim); line-height:2;"></div>
+    <div id="statsContent" style="font-size:14px;color:var(--text-dim);line-height:2;"></div>
     <div class="modal-row" style="margin-top:20px;">
       <button class="btn-modal ok" onclick="document.getElementById('statsOverlay').classList.remove('show')">Close</button>
     </div>
   </div>
 </div>
 
-<!-- ═══════════ RESET MODAL ═══════════ -->
+<!-- Reset modal -->
 <div class="overlay" id="resetOverlay">
   <div class="modal">
     <h3 class="red">Reset Everything?</h3>
-    <p>This will erase your bankroll, all history, and all stats. You'll be taken back to the setup screen. This cannot be undone.</p>
+    <p>This erases your bankroll, history, and all stats. Cannot be undone.</p>
     <div class="modal-row">
       <button class="btn-modal cancel" onclick="document.getElementById('resetOverlay').classList.remove('show')">Cancel</button>
       <button class="btn-modal confirm" onclick="hardReset()">Yes, Reset</button>
     </div>
+  </div>
+</div>
+
+<!-- Time picker sheet -->
+<div class="time-picker-overlay" id="timePickerOverlay">
+  <div class="time-picker-sheet">
+    <div class="tps-header">
+      <div>
+        <div class="tps-title">Set Game Time</div>
+        <div class="tps-target" id="tpsTarget">Game 1</div>
+      </div>
+      <button class="tps-close" onclick="closeTimePicker()">✕</button>
+    </div>
+    <div class="tps-cols">
+      <div class="tps-col">
+        <div class="tps-col-label">Hour</div>
+        <div class="tps-scroll" id="tpsHours"></div>
+      </div>
+      <div class="tps-col">
+        <div class="tps-col-label">Min</div>
+        <div class="tps-scroll" id="tpsMins"></div>
+      </div>
+      <div class="tps-col">
+        <div class="tps-col-label">AM/PM</div>
+        <div class="tps-scroll" id="tpsAmPm"></div>
+      </div>
+    </div>
+    <button class="tps-confirm" onclick="confirmTimePicker()">Confirm Time</button>
   </div>
 </div>
 
@@ -725,306 +491,515 @@ body {
 // ═══════════════════════════════════════════
 //  TELEGRAM MINI APP INIT
 // ═══════════════════════════════════════════
-
 const tg = window.Telegram && window.Telegram.WebApp;
-if (tg) {
-  tg.ready();
-  tg.expand();
-}
+if (tg) { tg.ready(); tg.expand(); }
 
 // ═══════════════════════════════════════════
 //  CONFIG
 // ═══════════════════════════════════════════
-
 const API = 'https://crstracker-production.up.railway.app';
+
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+let S = null;
+let _busy = false;
+let _currentLegs = 3;
+let _timePickerTarget = null; // game index
 
 // ═══════════════════════════════════════════
 //  API CALLS
 // ═══════════════════════════════════════════
-
-async function apiGet() {
-  const r = await fetch(`${API}/api/state`);
-  if (r.status === 404) return null;
-  if (!r.ok) throw new Error('Server error');
-  return (await r.json()).state;
-}
-
-async function apiInit(bankroll) {
-  const r = await fetch(`${API}/api/init`, {
-    method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ bankroll })
-  });
-  if (!r.ok) { const e = await r.json(); throw new Error(e.error); }
-  return (await r.json()).state;
-}
-
-async function apiResult(outcome) {
-  const r = await fetch(`${API}/api/result`, {
-    method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ outcome })
-  });
-  if (!r.ok) { const e = await r.json(); throw new Error(e.error); }
-  return await r.json(); // { state, event }
-}
-
-async function apiNoGame() {
-  const r = await fetch(`${API}/api/no-game`, { method: 'POST' });
-  if (!r.ok) { const e = await r.json(); throw new Error(e.error); }
-  return (await r.json()).state;
-}
-
-async function apiDelete() {
-  await fetch(`${API}/api/state`, { method: 'DELETE' });
-}
-
-async function apiClearHistory() {
-  await fetch(`${API}/api/history`, { method: 'DELETE' });
-}
+async function apiGet()              { const r = await fetch(`${API}/api/state`);  if (r.status===404) return null; if (!r.ok) throw new Error('Server error'); return (await r.json()).state; }
+async function apiInit(bankroll)     { const r = await fetch(`${API}/api/init`,    {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({bankroll})}); if (!r.ok){const e=await r.json();throw new Error(e.error);} return (await r.json()).state; }
+async function apiResult(outcome)    { const r = await fetch(`${API}/api/result`,  {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({outcome})}); if (!r.ok){const e=await r.json();throw new Error(e.error||e.message);} return await r.json(); }
+async function apiNoGame()           { const r = await fetch(`${API}/api/no-game`, {method:'POST'}); if (!r.ok){const e=await r.json();throw new Error(e.error||e.message);} return (await r.json()).state; }
+async function apiDelete()           { await fetch(`${API}/api/state`,   {method:'DELETE'}); }
+async function apiClearHistory()     { await fetch(`${API}/api/history`, {method:'DELETE'}); }
+async function apiPause(pause)       { const r = await fetch(`${API}/api/pause`,   {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pause})}); if (!r.ok) throw new Error('Pause toggle failed'); return await r.json(); }
+async function apiSaveSchedule(games){ const r = await fetch(`${API}/api/schedule`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({games})}); if (!r.ok){const e=await r.json();throw new Error(e.error);} return await r.json(); }
+async function apiDeleteSchedule()   { await fetch(`${API}/api/schedule`, {method:'DELETE'}); }
+async function apiCalcOdds(legs)     { const r = await fetch(`${API}/api/calc-odds`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({legs})}); if (!r.ok) throw new Error('Calc failed'); return await r.json(); }
 
 // ═══════════════════════════════════════════
-//  MATH (client-side display only)
+//  INIT
 // ═══════════════════════════════════════════
-
-function profitTarget(bankroll) { return Math.round(bankroll * 0.05); }
-function calcStake(lossesAccumulated, pt) { return Math.round((lossesAccumulated + pt) / 0.7); }
-
-// ═══════════════════════════════════════════
-//  BOOT
-// ═══════════════════════════════════════════
-
-let S = null;
-let _busy = false;
-
-function setAllButtons(disabled) {
-  ['btnWin','btnLoss','btnNoGame'].forEach(id => {
-    const b = document.getElementById(id);
-    if (b) b.disabled = disabled;
-  });
-}
-
 window.addEventListener('load', async () => {
-  document.getElementById('dateLabel').textContent =
-    new Date().toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long'});
+  document.getElementById('dateLabel').textContent = new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
   try {
     S = await apiGet();
     if (S) { showScreen('main'); renderAll(); }
-    else    { showScreen('setup'); }
-  } catch (e) {
-    showToast('⚠️ Could not reach server.');
-    showScreen('setup');
-  }
+    else showScreen('setup');
+  } catch (e) { showToast('⚠️ Could not reach server.'); showScreen('setup'); }
 });
-
-async function initSystem() {
-  const val = parseInt(document.getElementById('bankrollInput').value);
-  if (!val || val < 2001) { showToast('⚠️ Enter a bankroll above ₦2,000'); return; }
-  if (_busy) return; _busy = true;
-  showToast('⏳ Setting up...');
-  try {
-    S = await apiInit(val);
-    showScreen('main'); renderAll();
-    showToast("✅ System initialised. You're live.");
-  } catch (e) {
-    showToast(`⚠️ ${e.message}`);
-  } finally { _busy = false; }
-}
 
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
 
-// ═══════════════════════════════════════════
-//  RECORD RESULT
-// ═══════════════════════════════════════════
+async function initSystem() {
+  const raw = document.getElementById('bankrollInput').value;
+  const bankroll = parseInt(raw, 10);
+  if (!bankroll || bankroll < 2001) { showToast('⚠️ Enter a bankroll above ₦2,000.'); return; }
+  if (_busy) return; _busy = true;
+  try { S = await apiInit(bankroll); showScreen('main'); renderAll(); showToast('✅ Tracking started!'); }
+  catch (e) { showToast(`⚠️ ${e.message}`); }
+  finally { _busy = false; }
+}
 
+function setAllButtons(disabled) {
+  ['btnWin','btnLoss','btnNoGame'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = disabled;
+  });
+}
+
+// ═══════════════════════════════════════════
+//  RESULTS
+// ═══════════════════════════════════════════
 async function recordResult(outcome) {
   if (!S || _busy) return;
-  if (S.bankroll <= 2000) { showToast('⛔ Bankroll too low. Reload before betting.'); return; }
   _busy = true; setAllButtons(true);
-
   try {
-    const { state, event } = await apiResult(outcome);
-    S = state;
+    const r = await apiResult(outcome);
+    S = r.state;
+    const event = r.event;
     renderAll();
-
     if (event.kind === 'win') {
-      document.getElementById('winModalTitle').textContent =
-        event.round === 1 ? '✅ Clean Win!' : `✅ Recovered on Round ${event.round}!`;
-      document.getElementById('winModalMsg').innerHTML =
-        `Cycle <strong>${event.cycleNumber}</strong> complete.<br>
-         Profit: <strong style="color:var(--success)">+₦${event.profit.toLocaleString()}</strong><br>
-         New bankroll: <strong style="color:var(--amber)">₦${event.bankroll.toLocaleString()}</strong>`;
+      document.getElementById('winModalTitle').textContent = event.round===1 ? '✅ Clean Win!' : `✅ Recovered on Round ${event.round}!`;
+      document.getElementById('winModalMsg').innerHTML = `Cycle <strong>${event.cycleNumber}</strong> complete.<br>Profit: <strong style="color:var(--success)">+₦${event.profit.toLocaleString()}</strong><br>New bankroll: <strong style="color:var(--amber)">₦${event.bankroll.toLocaleString()}</strong>`;
       document.getElementById('winOverlay').classList.add('show');
-
     } else if (event.kind === 'bust') {
-      document.getElementById('bustDetails').innerHTML = `
-        <div class="row"><span>Total lost this cycle</span><span>₦${event.lostTotal.toLocaleString()}</span></div>
-        <div class="row"><span>Remaining bankroll</span><span>₦${event.bankroll.toLocaleString()}</span></div>
-        <div class="row"><span>New profit target (5%)</span><span>₦${event.newProfitTarget.toLocaleString()}</span></div>
-        <div class="row"><span>New Round 1 stake</span><span>₦${event.newStake.toLocaleString()}</span></div>`;
+      document.getElementById('bustDetails').innerHTML = `<div class="row"><span>Total lost</span><span>₦${event.lostTotal.toLocaleString()}</span></div><div class="row"><span>Remaining bankroll</span><span>₦${event.bankroll.toLocaleString()}</span></div><div class="row"><span>New profit target (5%)</span><span>₦${event.newProfitTarget.toLocaleString()}</span></div><div class="row"><span>New Round 1 stake</span><span>₦${event.newStake.toLocaleString()}</span></div>`;
       document.getElementById('bustOverlay').classList.add('show');
-
     } else {
       showToast(`Round ${event.round} — Stake ₦${event.newStake.toLocaleString()}`);
     }
   } catch (e) {
-    showToast(`⚠️ ${e.message}`);
+    if (e.message === 'pending_result') showToast("⚠️ Enter yesterday's result first.");
+    else showToast(`⚠️ ${e.message}`);
   } finally { _busy = false; setAllButtons(false); }
 }
-
-// ═══════════════════════════════════════════
-//  NO GAME TODAY
-// ═══════════════════════════════════════════
 
 async function recordNoGameToday() {
   if (!S || _busy) return;
   _busy = true; setAllButtons(true);
-  try {
-    S = await apiNoGame();
-    renderHistory();
-    showToast('🚫 No game logged for today.');
-  } catch (e) {
-    showToast(`⚠️ ${e.message}`);
+  try { S = await apiNoGame(); renderAll(); showToast('🚫 No game logged for today.'); }
+  catch (e) {
+    if (e.message === 'pending_result') showToast("⚠️ Enter yesterday's result first.");
+    else showToast(`⚠️ ${e.message}`);
   } finally { _busy = false; setAllButtons(false); }
 }
 
 // ═══════════════════════════════════════════
-//  TEST TELEGRAM NOTIFICATION
+//  PAUSE TOGGLE
 // ═══════════════════════════════════════════
-
-async function testNotify() {
-  showToast('⏳ Sending test notification...');
+async function togglePause() {
+  if (!S || _busy) return;
+  _busy = true;
   try {
-    const r = await fetch(`${API}/api/test-notify`, { method: 'POST' });
-    const d = await r.json();
-    if (r.ok) showToast('✅ Check your Telegram!');
-    else showToast(`⚠️ ${d.error}`);
-  } catch (e) {
-    showToast('⚠️ Could not reach server.');
+    const newPause = !S.pauseMode;
+    await apiPause(newPause);
+    S.pauseMode = newPause;
+    if (newPause) S.pauseStartDate = new Date().toISOString().slice(0,10);
+    else S.pauseStartDate = null;
+    renderPauseBtn();
+    showToast(newPause ? '⏸ Notifications paused.' : '▶ Notifications resumed.');
+  } catch (e) { showToast(`⚠️ ${e.message}`); }
+  finally { _busy = false; }
+}
+
+function renderPauseBtn() {
+  const btn = document.getElementById('pauseBtn');
+  if (!S) return;
+  if (S.pauseMode) { btn.textContent = '▶ Resume'; btn.classList.add('paused'); }
+  else             { btn.textContent = '⏸ Pause';  btn.classList.remove('paused'); }
+}
+
+// ═══════════════════════════════════════════
+//  GAME SCHEDULER
+// ═══════════════════════════════════════════
+function openScheduler() {
+  document.getElementById('schForm').style.display = 'block';
+  document.getElementById('btnSetGames').style.display = 'none';
+  buildLegsPills();
+  buildGameFields(_currentLegs);
+}
+
+function closeScheduler() {
+  document.getElementById('schForm').style.display = 'none';
+  document.getElementById('btnSetGames').style.display = 'inline-block';
+}
+
+function buildLegsPills() {
+  const container = document.getElementById('legsPills');
+  container.innerHTML = '';
+  [1,2,3,4,5].forEach(n => {
+    const p = document.createElement('button');
+    p.className = 'pill' + (n === _currentLegs ? ' active' : '');
+    p.textContent = n;
+    p.onclick = () => { _currentLegs = n; buildLegsPills(); buildGameFields(n); };
+    container.appendChild(p);
+  });
+}
+
+function buildGameFields(n) {
+  const container = document.getElementById('gameFields');
+  container.innerHTML = '';
+  for (let i = 0; i < n; i++) {
+    const div = document.createElement('div');
+    div.className = 'game-field';
+    div.innerHTML = `
+      <span class="game-num">${i+1}</span>
+      <input class="field-input" type="number" id="odds_${i}" placeholder="e.g. 1.45" step="0.01" min="1.01" max="9.99" oninput="liveCalcOdds()">
+      <div class="time-wrap">
+        <input class="field-input" type="text" id="time_${i}" placeholder="e.g. 3:30" maxlength="8">
+        <button class="time-scroll-btn" onclick="openTimePicker(${i})" type="button">🕐</button>
+      </div>`;
+    container.appendChild(div);
   }
+  document.getElementById('oddsResult').style.display = 'none';
+}
+
+async function liveCalcOdds() {
+  const legs = [];
+  for (let i = 0; i < _currentLegs; i++) {
+    const v = parseFloat(document.getElementById(`odds_${i}`)?.value);
+    if (v && v > 1) legs.push(v);
+  }
+  if (legs.length !== _currentLegs) { document.getElementById('oddsResult').style.display = 'none'; return; }
+  try {
+    const r = await apiCalcOdds(legs);
+    document.getElementById('orRaw').textContent      = r.raw;
+    document.getElementById('orLegs').textContent     = `${r.qualifying} of ${legs.length}`;
+    document.getElementById('orBonus').textContent    = `+${r.bonusPct}%`;
+    document.getElementById('orEffective').textContent = r.effective;
+    document.getElementById('orRounded').textContent  = r.rounded;
+    document.getElementById('oddsResult').style.display = 'block';
+  } catch (_) {}
+}
+
+async function saveSchedule() {
+  const games = [];
+  for (let i = 0; i < _currentLegs; i++) {
+    const odds = parseFloat(document.getElementById(`odds_${i}`)?.value);
+    const timeRaw = (document.getElementById(`time_${i}`)?.value || '').trim();
+    if (!odds || odds <= 1) { showToast(`⚠️ Enter odds for game ${i+1}.`); return; }
+    if (!timeRaw) { showToast(`⚠️ Enter time for game ${i+1}.`); return; }
+    const t24 = parseTimeTo24h(timeRaw);
+    if (!t24) { showToast(`⚠️ Invalid time for game ${i+1}. Use e.g. 3:30 or 3:30 PM`); return; }
+    games.push({ odds, startTime: t24 });
+  }
+  if (_busy) return; _busy = true;
+  try {
+    const r = await apiSaveSchedule(games);
+    S.todaySchedule = r.schedule;
+    closeScheduler();
+    renderSchedule();
+    showToast('✅ Schedule saved!');
+  } catch (e) { showToast(`⚠️ ${e.message}`); }
+  finally { _busy = false; }
+}
+
+async function clearSchedule() {
+  if (_busy) return; _busy = true;
+  try { await apiDeleteSchedule(); S.todaySchedule = null; renderSchedule(); showToast('Schedule cleared.'); }
+  catch (e) { showToast(`⚠️ ${e.message}`); }
+  finally { _busy = false; }
+}
+
+function renderSchedule() {
+  const display = document.getElementById('schDisplay');
+  const btnSet  = document.getElementById('btnSetGames');
+  const sch     = S && S.todaySchedule;
+
+  if (!sch) {
+    display.style.display = 'none';
+    btnSet.style.display  = 'inline-block';
+    return;
+  }
+
+  const or = sch.oddsResult;
+  const gamesHtml = sch.games.map((g, i) => `
+    <div class="sched-game-row">
+      <span class="sched-game-label">Game ${i+1}</span>
+      <span class="sched-game-val">Odds: ${g.odds} &nbsp;|&nbsp; ${formatTime12(g.startTime)} → ${formatTime12(g.endTime)}</span>
+    </div>`).join('');
+
+  const badgeCls  = sch.resultEntered ? 'done'    : 'pending';
+  const badgeTxt  = sch.resultEntered ? '✅ Done' : '⏳ Pending';
+
+  display.innerHTML = `
+    <div class="sched-display">
+      ${gamesHtml}
+      <div class="sched-odds-summary">
+        <div>
+          <div class="sched-odds-label">Effective Odds</div>
+          <div class="sched-odds-val">${or.rounded}</div>
+          <div style="font-size:11px;color:var(--text-faint);margin-top:2px">Raw ${or.raw} + ${or.bonusPct}% bonus</div>
+        </div>
+        <span class="sched-result-badge ${badgeCls}">${badgeTxt}</span>
+      </div>
+      <button class="btn-sch-action danger" style="width:100%;margin-top:10px" onclick="clearSchedule()">✕ Clear Schedule</button>
+    </div>`;
+  display.style.display = 'block';
+  btnSet.style.display  = 'none';
+}
+
+// ═══════════════════════════════════════════
+//  TIME PICKER
+// ═══════════════════════════════════════════
+function openTimePicker(gameIndex) {
+  _timePickerTarget = gameIndex;
+  document.getElementById('tpsTarget').textContent = `Game ${gameIndex + 1}`;
+
+  // Build hours
+  const hoursEl = document.getElementById('tpsHours');
+  hoursEl.innerHTML = '<div style="height:78px"></div>';
+  for (let h = 1; h <= 12; h++) {
+    const d = document.createElement('div');
+    d.className = 'tps-item'; d.textContent = String(h).padStart(2,'0'); d.dataset.val = h;
+    hoursEl.appendChild(d);
+  }
+  hoursEl.innerHTML += '<div style="height:78px"></div>';
+
+  // Build minutes
+  const minsEl = document.getElementById('tpsMins');
+  minsEl.innerHTML = '<div style="height:78px"></div>';
+  for (let m = 0; m < 60; m += 5) {
+    const d = document.createElement('div');
+    d.className = 'tps-item'; d.textContent = String(m).padStart(2,'0'); d.dataset.val = m;
+    minsEl.appendChild(d);
+  }
+  minsEl.innerHTML += '<div style="height:78px"></div>';
+
+  // Build AM/PM
+  const ampmEl = document.getElementById('tpsAmPm');
+  ampmEl.innerHTML = '<div style="height:78px"></div>';
+  ['AM','PM'].forEach(p => {
+    const d = document.createElement('div');
+    d.className = 'tps-item'; d.textContent = p; d.dataset.val = p;
+    ampmEl.appendChild(d);
+  });
+  ampmEl.innerHTML += '<div style="height:78px"></div>';
+
+  // Default to 3:00 PM
+  const existingVal = document.getElementById(`time_${gameIndex}`)?.value;
+  let defH = 3, defM = 0, defP = 'PM';
+  if (existingVal) {
+    const t = parseTimeTo24h(existingVal);
+    if (t) {
+      const [h24, m] = t.split(':').map(Number);
+      defP = h24 >= 12 ? 'PM' : 'AM';
+      defH = h24 % 12 || 12;
+      defM = m;
+    }
+  }
+
+  setTimeout(() => {
+    scrollToVal(hoursEl, defH, 1);
+    scrollToVal(minsEl,  defM, 5);
+    scrollToVal(ampmEl,  defP, 1, true);
+  }, 50);
+
+  document.getElementById('timePickerOverlay').classList.add('show');
+}
+
+function scrollToVal(container, val, step, isStr = false) {
+  const items = container.querySelectorAll('.tps-item');
+  items.forEach(item => {
+    const match = isStr ? item.dataset.val === val : parseInt(item.dataset.val) === val;
+    item.classList.toggle('selected', match);
+    if (match) item.scrollIntoView({ block:'center', behavior:'smooth' });
+  });
+}
+
+function closeTimePicker() {
+  document.getElementById('timePickerOverlay').classList.remove('show');
+}
+
+function confirmTimePicker() {
+  const hoursEl = document.getElementById('tpsHours');
+  const minsEl  = document.getElementById('tpsMins');
+  const ampmEl  = document.getElementById('tpsAmPm');
+
+  const selH = getScrollSelected(hoursEl) || '3';
+  const selM = getScrollSelected(minsEl)  || '0';
+  const selP = getScrollSelected(ampmEl)  || 'PM';
+
+  const h12 = parseInt(selH), m = parseInt(selM);
+  let h24 = h12 % 12;
+  if (selP === 'PM') h24 += 12;
+  const timeStr = `${String(h24).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+
+  const input = document.getElementById(`time_${_timePickerTarget}`);
+  if (input) input.value = formatTime12(timeStr);
+
+  closeTimePicker();
+  liveCalcOdds();
+}
+
+function getScrollSelected(container) {
+  // Get the item closest to the center of the scroll container
+  const items = container.querySelectorAll('.tps-item');
+  const midY  = container.scrollTop + container.clientHeight / 2;
+  let closest = null, closestDist = Infinity;
+  items.forEach(item => {
+    const dist = Math.abs((item.offsetTop + item.clientHeight / 2) - midY);
+    if (dist < closestDist) { closestDist = dist; closest = item; }
+  });
+  return closest ? closest.dataset.val : null;
+}
+
+// ═══════════════════════════════════════════
+//  TIME HELPERS
+// ═══════════════════════════════════════════
+function parseTimeTo24h(str) {
+  str = str.trim();
+  // Match formats: "3:30 PM", "15:30", "3:30", "330pm"
+  let match;
+  // HH:MM AM/PM
+  if ((match = str.match(/^(\d{1,2}):(\d{2})\s*(am|pm)?$/i))) {
+    let h = parseInt(match[1]), m = parseInt(match[2]);
+    const period = match[3] ? match[3].toLowerCase() : null;
+    if (m < 0 || m > 59) return null;
+    if (period) {
+      if (h < 1 || h > 12) return null;
+      if (period === 'pm' && h !== 12) h += 12;
+      if (period === 'am' && h === 12) h = 0;
+    } else {
+      // No AM/PM — default to PM if hour <= 12
+      if (h < 12) h += 12;
+    }
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+  }
+  return null;
+}
+
+function formatTime12(time24) {
+  const [h, m] = time24.split(':').map(Number);
+  const period = h >= 12 ? 'PM' : 'AM';
+  const h12    = h % 12 || 12;
+  return `${h12}:${String(m).padStart(2,'0')} ${period}`;
 }
 
 // ═══════════════════════════════════════════
 //  RENDER
 // ═══════════════════════════════════════════
-
 function renderAll() {
   if (!S) return;
 
+  // Pause button
+  renderPauseBtn();
+
+  // Banners
+  const hasPending = S.todaySchedule && !S.todaySchedule.resultEntered &&
+    S.todaySchedule.date !== new Date().toISOString().slice(0,10);
+  document.getElementById('pendingBanner').classList.toggle('show', !!hasPending);
+
+  // Bankroll
   document.getElementById('bkAmount').textContent = S.bankroll.toLocaleString();
   const diff = S.bankroll - S.initialBankroll;
   const deltaEl = document.getElementById('bkDelta');
-  if (diff === 0) {
-    deltaEl.textContent = 'Starting balance'; deltaEl.className = 'bk-delta';
-  } else if (diff > 0) {
-    deltaEl.textContent = `+₦${diff.toLocaleString()} from start (${((diff/S.initialBankroll)*100).toFixed(1)}%)`;
-    deltaEl.className = 'bk-delta pos';
-  } else {
-    deltaEl.textContent = `−₦${Math.abs(diff).toLocaleString()} from start`;
-    deltaEl.className = 'bk-delta neg';
-  }
+  if (diff === 0)       { deltaEl.textContent = 'Starting balance';         deltaEl.className = 'bk-delta'; }
+  else if (diff > 0)    { deltaEl.textContent = `+₦${diff.toLocaleString()} from start (${((diff/S.initialBankroll)*100).toFixed(1)}%)`; deltaEl.className = 'bk-delta pos'; }
+  else                  { deltaEl.textContent = `−₦${Math.abs(diff).toLocaleString()} from start`; deltaEl.className = 'bk-delta neg'; }
 
-  for (let i = 1; i <= 3; i++) {
+  // Round
+  for (let i=1; i<=3; i++) {
     const dot = document.getElementById(`dot${i}`);
     dot.className = 'rdot';
-    if (i < S.round) dot.classList.add('lost');
-    else if (i === S.round) dot.classList.add('active');
+    if (i < S.round)  dot.classList.add('lost');
+    if (i === S.round) dot.classList.add('active');
   }
-
-  const roundTexts = ['Round 1 — Fresh Cycle', 'Round 2 — Recovery Needed', 'Round 3 — Final Recovery'];
+  const roundTexts = ['Round 1 — Fresh Cycle','Round 2 — Recovery Needed','Round 3 — Final Recovery'];
   document.getElementById('roundText').textContent = roundTexts[S.round - 1];
 
+  // Stake
   document.getElementById('stakeAmt').textContent = S.currentStake.toLocaleString();
-  let subText = '';
-  if (S.round === 1) {
-    subText = `Win target: <span>+₦${S.profitTarget.toLocaleString()}</span> &nbsp;|&nbsp; Odds: <span>1.70</span>`;
-  } else if (S.round === 2) {
-    subText = `Recovering ₦${S.lossesAccumulated.toLocaleString()} + profit. Win = <span>+₦${S.profitTarget.toLocaleString()} net</span>`;
-  } else {
-    subText = `<span style="color:var(--danger)">Final chance</span>. Win = <span>+₦${S.profitTarget.toLocaleString()} net</span>. Loss = bust cycle.`;
-  }
-  document.getElementById('stakeSub').innerHTML = subText;
+  let sub = '';
+  if (S.round === 1)      sub = `Win target: <span>+₦${S.profitTarget.toLocaleString()}</span> &nbsp;|&nbsp; Odds: <span>1.70</span>`;
+  else if (S.round === 2) sub = `Recovering ₦${S.lossesAccumulated.toLocaleString()} + profit. Win = <span>+₦${S.profitTarget.toLocaleString()} net</span>`;
+  else                    sub = `<span style="color:var(--danger)">Final chance</span>. Win = <span>+₦${S.profitTarget.toLocaleString()} net</span>. Loss = bust.`;
+  document.getElementById('stakeSub').innerHTML = sub;
 
-  document.getElementById('statCycles').textContent = S.totalCycles;
-  document.getElementById('statWins').textContent   = S.successfulCycles;
-  document.getElementById('statBusts').textContent  = S.busts;
-
+  // Warning
   const warnBanner = document.getElementById('warnBanner');
   if (S.bankroll <= 2000) {
-    document.getElementById('warnText').textContent = 'HARD STOP — Bankroll below ₦2,000. Do not place any more bets. Reload your bankroll before continuing.';
+    document.getElementById('warnText').textContent = 'HARD STOP — Bankroll below ₦2,000. Do not bet. Reload bankroll before continuing.';
     warnBanner.classList.add('show');
   } else if (S.bankroll < S.initialBankroll * 0.4) {
-    document.getElementById('warnText').textContent = `Bankroll down to ${((S.bankroll/S.initialBankroll)*100).toFixed(0)}% of start. System is scaling down automatically — stay disciplined.`;
+    document.getElementById('warnText').textContent = `Bankroll down to ${((S.bankroll/S.initialBankroll)*100).toFixed(0)}% of start. System scaling down — stay disciplined.`;
     warnBanner.classList.add('show');
   } else {
     warnBanner.classList.remove('show');
   }
 
+  // Stats
+  document.getElementById('statCycles').textContent = S.totalCycles;
+  document.getElementById('statWins').textContent   = S.successfulCycles;
+  document.getElementById('statBusts').textContent  = S.busts;
+  document.getElementById('statStreak').textContent = S.streak || 0;
+
+  // Schedule
+  renderSchedule();
+
+  // History
   renderHistory();
 }
 
 function renderHistory() {
   const list = document.getElementById('histList');
-  if (!S.history.length) {
-    list.innerHTML = '<div class="hist-empty">No bets recorded yet.<br>Your history will appear here.</div>';
-    return;
-  }
-  list.innerHTML = S.history.slice(0, 40).map(h => {
+  if (!S.history.length) { list.innerHTML = '<div class="hist-empty">No bets recorded yet.<br>Your history will appear here.</div>'; return; }
+  list.innerHTML = S.history.slice(0,40).map(h => {
     const isBust   = h.type === 'loss' && h.round === 3;
     const isNoGame = h.type === 'no_game';
-    const cls    = isNoGame ? 'nogame-item' : h.type === 'win' ? 'win-item' : (isBust ? 'bust-item' : 'loss-item');
-    const amtCls = isNoGame ? '' : h.type === 'win' ? 'pos' : 'neg';
-    const amtVal = isNoGame ? '—' : h.type === 'win'
-      ? `+₦${h.profitTarget.toLocaleString()}`
-      : `−₦${h.stake.toLocaleString()}`;
-    const label  = isNoGame ? '🚫 NO GAME' : isBust ? '💥 BUST' : (h.type === 'win' ? '✅ WIN' : `❌ LOSS R${h.round}`);
-    return `
-      <div class="hist-item ${cls}">
-        <div class="hist-left">
-          <div class="hist-cycle">${h.date} · Cycle ${h.cycle}</div>
-          <div class="hist-desc">${label} — ${isNoGame ? 'Rest day' : `Staked ₦${h.stake.toLocaleString()}`}</div>
-        </div>
-        <div class="hist-right">
-          <div class="hist-amount ${amtCls}">${amtVal}</div>
-          <div class="hist-bk">BK: ₦${h.bankrollAfter.toLocaleString()}</div>
-        </div>
-      </div>`;
+    const cls      = isNoGame ? 'nogame-item' : h.type === 'win' ? 'win-item' : (isBust ? 'bust-item' : 'loss-item');
+    const amtCls   = isNoGame ? '' : h.type === 'win' ? 'pos' : 'neg';
+    const amtVal   = isNoGame ? '—' : h.type === 'win' ? `+₦${h.profitTarget.toLocaleString()}` : `−₦${h.stake.toLocaleString()}`;
+    const label    = isNoGame ? '🚫 NO GAME' : isBust ? '💥 BUST' : (h.type === 'win' ? '✅ WIN' : `❌ LOSS R${h.round}`);
+    return `<div class="hist-item ${cls}">
+      <div class="hist-left">
+        <div class="hist-cycle">${h.date} · Cycle ${h.cycle}</div>
+        <div class="hist-desc">${label} — ${isNoGame ? 'Rest day' : `Staked ₦${h.stake.toLocaleString()}`}</div>
+      </div>
+      <div class="hist-right">
+        <div class="hist-amount ${amtCls}">${amtVal}</div>
+        <div class="hist-bk">BK: ₦${h.bankrollAfter.toLocaleString()}</div>
+      </div>
+    </div>`;
   }).join('');
 }
 
 // ═══════════════════════════════════════════
-//  MODALS & ACTIONS
+//  MODALS
 // ═══════════════════════════════════════════
-
-function closeBust() {
-  document.getElementById('bustOverlay').classList.remove('show');
-  showToast(`Cycle reset. New stake: ₦${S.currentStake.toLocaleString()}`);
-}
-
-function closeWin() {
-  document.getElementById('winOverlay').classList.remove('show');
-}
+function closeBust() { document.getElementById('bustOverlay').classList.remove('show'); showToast(`Cycle reset. New stake: ₦${S.currentStake.toLocaleString()}`); }
+function closeWin()  { document.getElementById('winOverlay').classList.remove('show'); }
 
 function showStats() {
-  const wr  = S.totalCycles > 0 ? ((S.successfulCycles / S.totalCycles) * 100).toFixed(1) : '—';
+  if (!S) return;
+  const wr  = S.totalCycles > 0 ? ((S.successfulCycles/S.totalCycles)*100).toFixed(1) : '—';
   const net = S.bankroll - S.initialBankroll;
-  const netSign = net >= 0 ? '+' : '';
+  const ns  = net >= 0 ? '+' : '';
   document.getElementById('statsContent').innerHTML = `
-    <div style="display:grid; gap:4px;">
-      <div style="display:flex;justify-content:space-between;"><span>Initial bankroll</span><span style="color:var(--text)">₦${S.initialBankroll.toLocaleString()}</span></div>
-      <div style="display:flex;justify-content:space-between;"><span>Current bankroll</span><span style="color:var(--amber)">₦${S.bankroll.toLocaleString()}</span></div>
-      <div style="display:flex;justify-content:space-between;"><span>Net P&L</span><span style="color:${net>=0?'var(--success)':'var(--danger)'}">${netSign}₦${Math.abs(net).toLocaleString()}</span></div>
-      <div style="display:flex;justify-content:space-between;"><span>Return on initial</span><span>${netSign}${((net/S.initialBankroll)*100).toFixed(2)}%</span></div>
-      <div style="border-top:1px solid var(--border);margin:6px 0;"></div>
-      <div style="display:flex;justify-content:space-between;"><span>Total cycles</span><span>${S.totalCycles}</span></div>
-      <div style="display:flex;justify-content:space-between;"><span>Successful cycles</span><span style="color:var(--success)">${S.successfulCycles}</span></div>
-      <div style="display:flex;justify-content:space-between;"><span>Cycle success rate</span><span>${wr}%</span></div>
-      <div style="display:flex;justify-content:space-between;"><span>Busts</span><span style="color:var(--danger)">${S.busts}</span></div>
-      <div style="border-top:1px solid var(--border);margin:6px 0;"></div>
-      <div style="display:flex;justify-content:space-between;"><span>Current round</span><span>Round ${S.round}</span></div>
-      <div style="display:flex;justify-content:space-between;"><span>Current profit target</span><span style="color:var(--amber)">₦${S.profitTarget.toLocaleString()}</span></div>
-      <div style="display:flex;justify-content:space-between;"><span>Current stake</span><span style="color:var(--amber)">₦${S.currentStake.toLocaleString()}</span></div>
+    <div style="display:grid;gap:4px">
+      <div style="display:flex;justify-content:space-between"><span>Initial bankroll</span><span style="color:var(--text)">₦${S.initialBankroll.toLocaleString()}</span></div>
+      <div style="display:flex;justify-content:space-between"><span>Current bankroll</span><span style="color:var(--amber)">₦${S.bankroll.toLocaleString()}</span></div>
+      <div style="display:flex;justify-content:space-between"><span>Net P&L</span><span style="color:${net>=0?'var(--success)':'var(--danger)'}">${ns}₦${Math.abs(net).toLocaleString()}</span></div>
+      <div style="display:flex;justify-content:space-between"><span>Return</span><span>${ns}${((net/S.initialBankroll)*100).toFixed(2)}%</span></div>
+      <div style="border-top:1px solid var(--border);margin:6px 0"></div>
+      <div style="display:flex;justify-content:space-between"><span>Streak</span><span style="color:var(--amber)">${S.streak||0} days 🔥</span></div>
+      <div style="display:flex;justify-content:space-between"><span>Total cycles</span><span>${S.totalCycles}</span></div>
+      <div style="display:flex;justify-content:space-between"><span>Successful</span><span style="color:var(--success)">${S.successfulCycles}</span></div>
+      <div style="display:flex;justify-content:space-between"><span>Win rate</span><span>${wr}%</span></div>
+      <div style="display:flex;justify-content:space-between"><span>Busts</span><span style="color:var(--danger)">${S.busts}</span></div>
+      <div style="border-top:1px solid var(--border);margin:6px 0"></div>
+      <div style="display:flex;justify-content:space-between"><span>Current round</span><span>Round ${S.round}</span></div>
+      <div style="display:flex;justify-content:space-between"><span>Profit target</span><span style="color:var(--amber)">₦${S.profitTarget.toLocaleString()}</span></div>
+      <div style="display:flex;justify-content:space-between"><span>Current stake</span><span style="color:var(--amber)">₦${S.currentStake.toLocaleString()}</span></div>
+      <div style="display:flex;justify-content:space-between"><span>Notifications</span><span>${S.pauseMode ? '⏸ Paused' : '▶ Active'}</span></div>
     </div>`;
   document.getElementById('statsOverlay').classList.add('show');
 }
@@ -1037,36 +1012,38 @@ async function hardReset() {
   document.getElementById('resetOverlay').classList.remove('show');
   showScreen('setup');
   document.getElementById('bankrollInput').value = '';
-  showToast('System reset. Enter new bankroll.');
+  showToast('System reset.');
 }
 
 async function clearHistory() {
   if (!S) return;
+  try { await apiClearHistory(); S.history = []; renderHistory(); showToast('History cleared.'); }
+  catch (e) { showToast(`⚠️ ${e.message}`); }
+}
+
+async function testNotify() {
+  showToast('⏳ Sending...');
   try {
-    await apiClearHistory();
-    S.history = [];
-    renderHistory();
-    showToast('History cleared.');
-  } catch (e) { showToast(`⚠️ ${e.message}`); }
+    const r = await fetch(`${API}/api/test-notify`, { method:'POST' });
+    const d = await r.json();
+    if (r.ok) showToast('✅ Check your Telegram!');
+    else showToast(`⚠️ ${d.error}`);
+  } catch (_) { showToast('⚠️ Could not reach server.'); }
 }
 
 // ═══════════════════════════════════════════
 //  TOAST
 // ═══════════════════════════════════════════
-
-let toastTimer = null;
+let _toastTimer = null;
 function showToast(msg) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  if (toastTimer) clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+  t.textContent = msg; t.classList.add('show');
+  if (_toastTimer) clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
 }
 
 document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && document.getElementById('setup').classList.contains('active')) {
-    initSystem();
-  }
+  if (e.key === 'Enter' && document.getElementById('setup').classList.contains('active')) initSystem();
 });
 </script>
 </body>
