@@ -1324,17 +1324,7 @@ async function saveSchedule() {
     const [bh, bm] = b.startTime.split(':').map(Number);
     return (ah * 60 + am) - (bh * 60 + bm);
   });
-  // Conflict detection
-  for (let i = 0; i < games.length - 1; i++) {
-    const [h1, m1] = games[i].startTime.split(':').map(Number);
-    const [h2, m2] = games[i+1].startTime.split(':').map(Number);
-    const end1Min  = h1 * 60 + m1 + 150;
-    const start2Min = h2 * 60 + m2;
-    if (start2Min < end1Min) {
-      showToast(`⚠️ Game ${i+2} starts before Game ${i+1} ends.`);
-      return;
-    }
-  }
+
   if (_busy) return; _busy = true;
   try {
     const res = await apiSaveSchedule(games);
