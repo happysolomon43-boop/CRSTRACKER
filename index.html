@@ -183,6 +183,10 @@ body{background:var(--bg);color:var(--text);font-family:'Source Serif 4',Georgia
 .legs-pills{display:flex;gap:6px;flex-wrap:wrap}
 .pill{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-size:13px;color:var(--text-dim);cursor:pointer;transition:all .2s;font-family:'Source Serif 4',serif}
 .pill.active{background:var(--amber-dim);border-color:var(--border-hi);color:var(--amber-hi);font-weight:600}
+.legs-custom-input{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:5px 10px;font-size:13px;color:var(--text-dim);font-family:'Source Serif 4',serif;outline:none;width:62px;text-align:center;-moz-appearance:textfield;transition:all .2s}
+.legs-custom-input::-webkit-inner-spin-button,.legs-custom-input::-webkit-outer-spin-button{-webkit-appearance:none}
+.legs-custom-input:focus{border-color:var(--border-hi);color:var(--text)}
+.legs-custom-input.active{background:var(--amber-dim);border-color:var(--border-hi);color:var(--amber-hi);font-weight:600}
 .game-field{display:grid;grid-template-columns:auto 1fr 1fr;gap:10px;align-items:center;margin-bottom:10px}
 .game-num{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-faint);width:20px;text-align:center}
 .field-input{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:15px;color:var(--text);outline:none;width:100%;font-family:'DM Mono',monospace;transition:border-color .2s}
@@ -1154,9 +1158,31 @@ function buildLegsPills() {
     const p = document.createElement('button');
     p.className = 'pill' + (n === _currentLegs ? ' active' : '');
     p.textContent = n;
-    p.onclick = () => { _currentLegs = n; buildLegsPills(); buildGameFields(n); };
+    p.onclick = () => {
+      _currentLegs = n;
+      buildLegsPills();
+      buildGameFields(n);
+    };
     c.appendChild(p);
   });
+
+  // Custom input for 6–30
+  const inp = document.createElement('input');
+  inp.type        = 'number';
+  inp.className   = 'legs-custom-input' + (_currentLegs > 5 ? ' active' : '');
+  inp.min         = 6;
+  inp.max         = 30;
+  inp.placeholder = '6–30';
+  inp.value       = _currentLegs > 5 ? _currentLegs : '';
+  inp.oninput = () => {
+    const v = parseInt(inp.value);
+    if (!v || v < 6 || v > 30) return;
+    _currentLegs = v;
+    c.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    inp.classList.add('active');
+    buildGameFields(v);
+  };
+  c.appendChild(inp);
 }
 function buildGameFields(n) {
   const c = document.getElementById('gameFields'); c.innerHTML = '';
