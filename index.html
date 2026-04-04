@@ -1318,6 +1318,12 @@ async function saveSchedule() {
     if (!t24) { showToast(`⚠️ Invalid time for game ${i+1}. Use e.g. 3:30 PM`); return; }
     games.push({ odds, startTime: t24 });
   }
+  // Auto-sort by start time so user doesn't need to enter in order
+  games.sort((a, b) => {
+    const [ah, am] = a.startTime.split(':').map(Number);
+    const [bh, bm] = b.startTime.split(':').map(Number);
+    return (ah * 60 + am) - (bh * 60 + bm);
+  });
   // Conflict detection
   for (let i = 0; i < games.length - 1; i++) {
     const [h1, m1] = games[i].startTime.split(':').map(Number);
