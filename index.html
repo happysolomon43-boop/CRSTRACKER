@@ -3,287 +3,406 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>CRS Tracker</title>
+<title>CRS Tracker — ADAPTATION</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&family=Source+Serif+4:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:        #1A0F06;
-  --surface:   #251508;
-  --card:      #2F1A0A;
-  --border:    rgba(232,160,32,.15);
-  --border-hi: rgba(232,160,32,.4);
-  --amber:     #E8A020;
-  --amber-hi:  #F5C842;
-  --amber-dim: rgba(232,160,32,.12);
-  --rust:      #C45E1A;
-  --cream:     #FAF3E0;
-  --cream-dim: rgba(250,243,224,.55);
-  --success:   #4CAF72;
-  --success-bg:#0D2B18;
-  --success-bd:rgba(76,175,114,.3);
-  --danger:    #E05C3A;
-  --danger-bg: #2B0D06;
-  --danger-bd: rgba(224,92,58,.3);
-  --warn:      #F5C842;
-  --warn-bg:   #2B1E06;
-  --info:      #4A9EDB;
-  --info-bg:   #0A1F2B;
-  --info-bd:   rgba(74,158,219,.3);
-  --text:      #FAF3E0;
-  --text-dim:  rgba(250,243,224,.5);
-  --text-faint:rgba(250,243,224,.28);
+  --bg:         #1A0F06;
+  --surface:    #251508;
+  --card:       #2F1A0A;
+  --border:     rgba(232,160,32,.15);
+  --border-hi:  rgba(232,160,32,.4);
+  --amber:      #E8A020;
+  --amber-hi:   #F5C842;
+  --amber-dim:  rgba(232,160,32,.12);
+  --rust:       #C45E1A;
+  --cream:      #FAF3E0;
+  --cream-dim:  rgba(250,243,224,.55);
+  --success:    #4CAF72;
+  --success-bg: #0D2B18;
+  --success-bd: rgba(76,175,114,.3);
+  --danger:     #E05C3A;
+  --danger-bg:  #2B0D06;
+  --danger-bd:  rgba(224,92,58,.3);
+  --warn:       #F5C842;
+  --warn-bg:    #2B1E06;
+  --info:       #4A9EDB;
+  --info-bg:    #0A1F2B;
+  --info-bd:    rgba(74,158,219,.3);
+  --recovery:   #E8820A;
+  --recovery-bg:#2B1500;
+  --recovery-bd:rgba(232,130,10,.35);
+  --survival:   #DB4A9E;
+  --survival-bg:#2B0820;
+  --survival-bd:rgba(219,74,158,.35);
+  --text:       #FAF3E0;
+  --text-dim:   rgba(250,243,224,.5);
+  --text-faint: rgba(250,243,224,.28);
 }
-* { margin:0; padding:0; box-sizing:border-box; }
-html { scroll-behavior:smooth; }
-body { background:var(--bg); color:var(--text); font-family:'Source Serif 4',Georgia,serif; min-height:100vh; padding-bottom:60px; }
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Source Serif 4',Georgia,serif;min-height:100vh;padding-bottom:70px}
+.screen{display:none}.screen.active{display:block}
 
-.screen { display:none; }
-.screen.active { display:block; }
+/* ── AUTH ── */
+#auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.auth-card{background:var(--card);border:1px solid var(--border-hi);border-radius:20px;padding:50px 40px;max-width:420px;width:100%;box-shadow:0 0 60px rgba(232,160,32,.08);animation:fadeUp .5s ease}
+.auth-logo{text-align:center;margin-bottom:36px}
+.auth-logo .icon{width:64px;height:64px;background:linear-gradient(135deg,var(--rust),var(--amber));border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px;box-shadow:0 8px 24px rgba(232,160,32,.25)}
+.auth-logo h1{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--amber-hi)}
+.auth-logo p{font-size:13px;color:var(--text-dim);margin-top:6px}
+.field-label{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--amber);margin-bottom:10px;font-weight:600}
+.secret-wrap{position:relative;margin-bottom:16px}
+.secret-input{width:100%;background:var(--surface);border:2px solid var(--border-hi);border-radius:12px;padding:16px 50px 16px 18px;font-size:17px;color:var(--text);outline:none;transition:border-color .2s;letter-spacing:.08em;font-family:'DM Mono',monospace}
+.secret-input:focus{border-color:var(--amber)}
+.btn-eye{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:18px;line-height:1;transition:color .2s}
+.btn-eye:hover{color:var(--amber)}
+.remember-row{display:flex;align-items:center;gap:10px;margin-bottom:24px;cursor:pointer;user-select:none}
+.remember-row input[type=checkbox]{width:18px;height:18px;accent-color:var(--amber);cursor:pointer;flex-shrink:0}
+.remember-row span{font-size:14px;color:var(--text-dim)}
+.auth-err{color:var(--danger);font-size:13px;margin-bottom:14px;display:none;text-align:center}
+.auth-err.show{display:block}
+.btn-primary{width:100%;background:linear-gradient(135deg,var(--rust),var(--amber));color:var(--bg);font-family:'Playfair Display',serif;font-size:17px;font-weight:700;border:none;border-radius:12px;padding:18px;cursor:pointer;transition:opacity .2s,transform .15s}
+.btn-primary:hover{opacity:.9;transform:translateY(-1px)}
+.btn-primary:disabled{opacity:.55;cursor:not-allowed;transform:none}
 
 /* ── SETUP ── */
-#setup { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
-.setup-card { background:var(--card); border:1px solid var(--border-hi); border-radius:20px; padding:50px 40px; max-width:420px; width:100%; box-shadow:0 0 60px rgba(232,160,32,.08); animation:fadeUp .5s ease; }
-.setup-logo { text-align:center; margin-bottom:36px; }
-.setup-logo .icon { width:64px; height:64px; background:linear-gradient(135deg,var(--rust),var(--amber)); border-radius:16px; display:flex; align-items:center; justify-content:center; margin:0 auto 16px; font-size:28px; box-shadow:0 8px 24px rgba(232,160,32,.25); }
-.setup-logo h1 { font-family:'Playfair Display',serif; font-size:28px; font-weight:900; color:var(--amber-hi); }
-.setup-logo p { font-size:13px; color:var(--text-dim); margin-top:6px; }
-.field-label { font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--amber); margin-bottom:10px; font-weight:600; }
-.bankroll-input-wrap { position:relative; margin-bottom:28px; }
-.currency-sym { position:absolute; left:18px; top:50%; transform:translateY(-50%); font-family:'Playfair Display',serif; font-size:22px; color:var(--amber); font-weight:700; }
-#bankrollInput { width:100%; background:var(--surface); border:2px solid var(--border-hi); border-radius:12px; padding:18px 18px 18px 44px; font-family:'Playfair Display',serif; font-size:28px; font-weight:700; color:var(--text); outline:none; transition:border-color .2s; -moz-appearance:textfield; }
+#setup{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.setup-card{background:var(--card);border:1px solid var(--border-hi);border-radius:20px;padding:50px 40px;max-width:420px;width:100%;box-shadow:0 0 60px rgba(232,160,32,.08);animation:fadeUp .5s ease}
+.setup-logo{text-align:center;margin-bottom:36px}
+.setup-logo .icon{width:64px;height:64px;background:linear-gradient(135deg,var(--rust),var(--amber));border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px;box-shadow:0 8px 24px rgba(232,160,32,.25)}
+.setup-logo h1{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--amber-hi)}
+.setup-logo p{font-size:13px;color:var(--text-dim);margin-top:6px}
+.bankroll-input-wrap{position:relative;margin-bottom:28px}
+.currency-sym{position:absolute;left:18px;top:50%;transform:translateY(-50%);font-family:'Playfair Display',serif;font-size:22px;color:var(--amber);font-weight:700}
+#bankrollInput{width:100%;background:var(--surface);border:2px solid var(--border-hi);border-radius:12px;padding:18px 18px 18px 44px;font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--text);outline:none;transition:border-color .2s;-moz-appearance:textfield}
 #bankrollInput::-webkit-inner-spin-button,#bankrollInput::-webkit-outer-spin-button{-webkit-appearance:none}
-#bankrollInput:focus { border-color:var(--amber); }
-.setup-info { background:var(--amber-dim); border:1px solid var(--border-hi); border-radius:10px; padding:14px 16px; font-size:13px; color:var(--cream-dim); margin-bottom:28px; line-height:1.6; }
-.setup-info strong { color:var(--amber-hi); }
-.btn-primary { width:100%; background:linear-gradient(135deg,var(--rust),var(--amber)); color:var(--bg); font-family:'Playfair Display',serif; font-size:17px; font-weight:700; border:none; border-radius:12px; padding:18px; cursor:pointer; transition:opacity .2s,transform .15s; }
-.btn-primary:hover { opacity:.9; transform:translateY(-1px); }
+#bankrollInput:focus{border-color:var(--amber)}
+.setup-info{background:var(--amber-dim);border:1px solid var(--border-hi);border-radius:10px;padding:14px 16px;font-size:13px;color:var(--cream-dim);margin-bottom:28px;line-height:1.6}
+.setup-info strong{color:var(--amber-hi)}
 
 /* ── MAIN ── */
-#main { max-width:480px; margin:0 auto; padding:0 16px; }
-
-.top-bar { display:flex; justify-content:space-between; align-items:center; padding:20px 0 16px; border-bottom:1px solid var(--border); margin-bottom:16px; }
-.top-bar-title { font-family:'Playfair Display',serif; font-size:20px; font-weight:900; color:var(--amber-hi); }
-.top-bar-sub { font-size:12px; color:var(--text-faint); margin-top:2px; }
-.top-bar-actions { display:flex; gap:8px; align-items:center; }
-.btn-icon { background:var(--card); border:1px solid var(--border); color:var(--text-dim); border-radius:8px; width:36px; height:36px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; transition:border-color .2s,color .2s; }
-.btn-icon:hover { border-color:var(--amber); color:var(--amber); }
-
-/* Pause button */
-.btn-pause { background:var(--card); border:1px solid var(--border); color:var(--text-dim); border-radius:8px; padding:0 12px; height:36px; display:flex; align-items:center; gap:6px; cursor:pointer; font-family:'Source Serif 4',serif; font-size:12px; transition:all .2s; white-space:nowrap; }
-.btn-pause:hover { border-color:var(--amber); color:var(--amber); }
-.btn-pause.paused { border-color:rgba(245,200,66,.5); color:var(--warn); background:rgba(43,30,6,.6); }
+#main{max-width:480px;margin:0 auto;padding:0 16px}
+.top-bar{display:flex;justify-content:space-between;align-items:center;padding:20px 0 16px;border-bottom:1px solid var(--border);margin-bottom:16px}
+.top-bar-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:var(--amber-hi)}
+.top-bar-sub{font-size:12px;color:var(--text-faint);margin-top:2px}
+.top-bar-actions{display:flex;gap:8px;align-items:center}
+.btn-icon{background:var(--card);border:1px solid var(--border);color:var(--text-dim);border-radius:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:border-color .2s,color .2s}
+.btn-icon:hover{border-color:var(--amber);color:var(--amber)}
+.btn-pause{background:var(--card);border:1px solid var(--border);color:var(--text-dim);border-radius:8px;padding:0 12px;height:36px;display:flex;align-items:center;gap:6px;cursor:pointer;font-family:'Source Serif 4',serif;font-size:12px;transition:all .2s;white-space:nowrap}
+.btn-pause:hover{border-color:var(--amber);color:var(--amber)}
+.btn-pause.paused{border-color:rgba(245,200,66,.5);color:var(--warn);background:rgba(43,30,6,.6)}
 
 /* Banners */
-.banner { border-radius:12px; padding:14px 16px; margin-bottom:12px; display:none; font-size:13px; line-height:1.5; gap:10px; align-items:flex-start; }
-.banner.show { display:flex; }
-.banner .bi { font-size:20px; flex-shrink:0; }
-.banner-warn { background:var(--warn-bg); border:1px solid rgba(245,200,66,.4); color:var(--warn); }
-.banner-danger { background:var(--danger-bg); border:1px solid var(--danger-bd); color:var(--danger); }
-.banner-info  { background:var(--info-bg);  border:1px solid var(--info-bd);  color:var(--info); }
+.banner{border-radius:12px;padding:14px 16px;margin-bottom:12px;display:none;font-size:13px;line-height:1.5;gap:10px;align-items:flex-start}
+.banner.show{display:flex}
+.banner .bi{font-size:20px;flex-shrink:0}
+.banner-warn{background:var(--warn-bg);border:1px solid rgba(245,200,66,.4);color:var(--warn)}
+.banner-danger{background:var(--danger-bg);border:1px solid var(--danger-bd);color:var(--danger)}
+.banner-info{background:var(--info-bg);border:1px solid var(--info-bd);color:var(--info)}
+.banner-recovery{background:var(--recovery-bg);border:1px solid var(--recovery-bd);color:var(--recovery)}
 
 /* Bankroll card */
-.bankroll-card { background:linear-gradient(135deg,var(--rust) 0%,#7A2E08 50%,var(--bg) 100%); border-radius:18px; padding:26px 24px; margin-bottom:16px; position:relative; overflow:hidden; box-shadow:0 4px 32px rgba(196,94,26,.2); }
-.bankroll-card::before { content:''; position:absolute; inset:0; background:repeating-linear-gradient(45deg,transparent,transparent 30px,rgba(255,255,255,.02) 30px,rgba(255,255,255,.02) 60px); }
-.bk-label { font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:rgba(250,243,224,.6); position:relative; }
-.bk-amount { font-family:'Playfair Display',serif; font-size:clamp(36px,10vw,52px); font-weight:900; color:var(--amber-hi); position:relative; line-height:1.1; margin:6px 0 4px; }
-.bk-amount .sym { font-size:.55em; vertical-align:top; margin-top:8px; display:inline-block; }
-.bk-delta { font-size:13px; position:relative; color:rgba(250,243,224,.6); }
-.bk-delta.pos { color:var(--success); }
-.bk-delta.neg { color:var(--danger); }
+.bankroll-card{background:linear-gradient(135deg,var(--rust) 0%,#7A2E08 50%,var(--bg) 100%);border-radius:18px;padding:26px 24px;margin-bottom:16px;position:relative;overflow:hidden;box-shadow:0 4px 32px rgba(196,94,26,.2)}
+.bankroll-card::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 30px,rgba(255,255,255,.02) 30px,rgba(255,255,255,.02) 60px)}
+.bk-top{display:flex;justify-content:space-between;align-items:flex-start;position:relative}
+.bk-label{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(250,243,224,.6)}
+.bk-amount{font-family:'Playfair Display',serif;font-size:clamp(36px,10vw,52px);font-weight:900;color:var(--amber-hi);position:relative;line-height:1.1;margin:6px 0 4px}
+.bk-amount .sym{font-size:.55em;vertical-align:top;margin-top:8px;display:inline-block}
+.bk-delta{font-size:13px;position:relative;color:rgba(250,243,224,.6)}
+.bk-delta.pos{color:var(--success)}
+.bk-delta.neg{color:var(--danger)}
+.bk-badge{background:rgba(0,0,0,.3);border:1px solid rgba(232,160,32,.25);border-radius:8px;padding:4px 10px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgba(250,243,224,.6);white-space:nowrap}
 
 /* Round tracker */
-.round-track { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px 20px; margin-bottom:16px; display:flex; align-items:center; gap:16px; }
-.round-dots { display:flex; gap:8px; }
-.rdot { width:14px; height:14px; border-radius:50%; background:var(--surface); border:2px solid rgba(232,160,32,.2); transition:all .3s; }
-.rdot.active { background:var(--amber); border-color:var(--amber); box-shadow:0 0 10px rgba(232,160,32,.4); }
-.rdot.lost { background:var(--danger); border-color:var(--danger); }
-.round-info { flex:1; }
-.round-label { font-size:11px; letter-spacing:.15em; text-transform:uppercase; color:var(--text-faint); }
-.round-text { font-family:'Playfair Display',serif; font-size:17px; font-weight:700; color:var(--text); margin-top:3px; }
+.round-track{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:16px;display:flex;align-items:center;gap:16px}
+.round-dots{display:flex;gap:8px}
+.rdot{width:14px;height:14px;border-radius:50%;background:var(--surface);border:2px solid rgba(232,160,32,.2);transition:all .3s}
+.rdot.active{background:var(--amber);border-color:var(--amber);box-shadow:0 0 10px rgba(232,160,32,.4)}
+.rdot.lost{background:var(--danger);border-color:var(--danger)}
+.round-info{flex:1}
+.round-label{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--text-faint)}
+.round-text{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--text);margin-top:3px}
 
-/* Stake card */
-.stake-card { background:var(--card); border:2px solid var(--border-hi); border-radius:18px; padding:24px 22px; margin-bottom:16px; text-align:center; position:relative; }
-.stake-label { font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--amber); font-weight:600; margin-bottom:10px; }
-.stake-amount { font-family:'Playfair Display',serif; font-size:clamp(42px,12vw,64px); font-weight:900; color:var(--amber-hi); line-height:1; }
-.stake-amount .sym { font-size:.5em; vertical-align:top; margin-top:10px; display:inline-block; }
-.stake-sub { font-size:13px; color:var(--text-dim); margin-top:10px; }
-.stake-sub span { color:var(--amber); font-weight:600; }
+/* ── TICKET ENTRY CARD ── */
+.ticket-card{background:var(--card);border:2px dashed var(--border-hi);border-radius:18px;padding:22px 20px;margin-bottom:16px}
+.ticket-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.ticket-title{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--amber);font-weight:600}
+.ticket-avg{font-size:11px;color:var(--text-faint)}
+.ticket-avg span{color:var(--amber-hi);font-family:'DM Mono',monospace}
+.ticket-input-wrap{position:relative;margin-bottom:14px}
+.ticket-input{width:100%;background:var(--surface);border:2px solid var(--border-hi);border-radius:12px;padding:18px 18px 18px 52px;font-family:'Playfair Display',serif;font-size:32px;font-weight:900;color:var(--amber-hi);outline:none;transition:border-color .2s;-moz-appearance:textfield}
+.ticket-input::-webkit-inner-spin-button,.ticket-input::-webkit-outer-spin-button{-webkit-appearance:none}
+.ticket-input:focus{border-color:var(--amber)}
+.ticket-prefix{position:absolute;left:18px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--text-faint);letter-spacing:.06em;pointer-events:none}
+.ticket-preview{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:14px;display:none}
+.ticket-preview-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--text-dim);margin-bottom:6px}
+.ticket-preview-row:last-child{margin-bottom:0;padding-top:8px;border-top:1px solid var(--border)}
+.ticket-preview-row .tval{font-family:'DM Mono',monospace;color:var(--text)}
+.ticket-preview-row .tval.hi{color:var(--amber-hi);font-weight:700;font-size:17px}
+.mode-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.mode-badge.profit-plus{background:rgba(76,175,114,.2);color:var(--success);border:1px solid var(--success-bd)}
+.mode-badge.profit{background:var(--amber-dim);color:var(--amber-hi);border:1px solid var(--border-hi)}
+.mode-badge.cautious{background:rgba(74,158,219,.15);color:var(--info);border:1px solid var(--info-bd)}
+.mode-badge.recovery{background:var(--recovery-bg);color:var(--recovery);border:1px solid var(--recovery-bd)}
+.mode-badge.survival{background:var(--survival-bg);color:var(--survival);border:1px solid var(--survival-bd)}
+.ticket-warn{font-size:12px;color:var(--danger);margin-bottom:10px;padding:10px 12px;background:var(--danger-bg);border:1px solid var(--danger-bd);border-radius:8px;display:none}
+.ticket-warn.show{display:block}
+.btn-lock-stake{width:100%;background:linear-gradient(135deg,var(--rust),var(--amber));color:var(--bg);font-family:'Playfair Display',serif;font-size:16px;font-weight:700;border:none;border-radius:12px;padding:16px;cursor:pointer;transition:opacity .2s;margin-top:4px}
+.btn-lock-stake:hover{opacity:.9}
+.btn-lock-stake:disabled{opacity:.4;cursor:not-allowed}
+.ticket-hint{font-size:12px;color:var(--text-faint);text-align:center;margin-top:10px}
 
-/* ── GAME SCHEDULER ── */
-.scheduler-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px 18px 14px; margin-bottom:16px; }
-.scheduler-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
-.scheduler-title { font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--amber); font-weight:600; }
-.btn-sch-action { background:none; border:1px solid var(--border-hi); border-radius:8px; padding:5px 12px; font-size:12px; color:var(--amber); cursor:pointer; font-family:'Source Serif 4',serif; transition:all .2s; }
-.btn-sch-action:hover { background:var(--amber-dim); }
-.btn-sch-action.danger { border-color:var(--danger-bd); color:var(--danger); }
-.btn-sch-action.danger:hover { background:var(--danger-bg); }
+/* ── STAKE CARD ── */
+.stake-card{background:var(--card);border:2px solid var(--border-hi);border-radius:18px;padding:24px 22px;margin-bottom:16px;text-align:center;position:relative}
+.stake-card.mode-recovery{border-color:var(--recovery-bd);background:var(--recovery-bg)}
+.stake-card.mode-survival{border-color:var(--survival-bd);background:var(--survival-bg)}
+.stake-top{display:flex;justify-content:center;gap:8px;margin-bottom:10px;align-items:center}
+.stake-label{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--amber);font-weight:600}
+.stake-amount{font-family:'Playfair Display',serif;font-size:clamp(42px,12vw,64px);font-weight:900;color:var(--amber-hi);line-height:1}
+.stake-card.mode-recovery .stake-amount{color:var(--recovery)}
+.stake-card.mode-survival .stake-amount{color:var(--survival)}
+.stake-amount .sym{font-size:.5em;vertical-align:top;margin-top:10px;display:inline-block}
+.stake-sub{font-size:13px;color:var(--text-dim);margin-top:10px}
+.stake-sub span{color:var(--amber);font-weight:600}
+.stake-sub .warn-span{color:var(--danger)}
+.stake-odds-tag{margin-top:8px;font-size:11px;color:var(--text-faint);font-family:'DM Mono',monospace}
 
-/* Legs selector */
-.legs-row { display:flex; gap:8px; margin-bottom:14px; align-items:center; }
-.legs-label { font-size:11px; color:var(--text-faint); letter-spacing:.08em; white-space:nowrap; }
-.legs-pills { display:flex; gap:6px; flex-wrap:wrap; }
-.pill { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:5px 14px; font-size:13px; color:var(--text-dim); cursor:pointer; transition:all .2s; font-family:'Source Serif 4',serif; }
-.pill.active { background:var(--amber-dim); border-color:var(--border-hi); color:var(--amber-hi); font-weight:600; }
-
-/* Game fields */
-.game-field { display:grid; grid-template-columns:auto 1fr 1fr; gap:10px; align-items:center; margin-bottom:10px; }
-.game-num { font-family:'DM Mono',monospace; font-size:11px; color:var(--text-faint); width:20px; text-align:center; }
-.field-input { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:10px 12px; font-size:15px; color:var(--text); outline:none; width:100%; font-family:'DM Mono',monospace; transition:border-color .2s; }
-.field-input:focus { border-color:var(--amber); }
-.field-input::placeholder { color:var(--text-faint); font-size:13px; }
-
-/* Time input wrapper */
-.time-wrap { position:relative; }
-.time-wrap .field-input { padding-right:36px; }
-.time-scroll-btn { position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-faint); cursor:pointer; font-size:14px; padding:4px; }
-.time-scroll-btn:hover { color:var(--amber); }
-
-/* Odds result display */
-.odds-result { background:var(--surface); border:1px solid var(--border-hi); border-radius:10px; padding:12px 14px; margin:10px 0; }
-.odds-result-row { display:flex; justify-content:space-between; font-size:13px; color:var(--text-dim); margin-bottom:4px; }
-.odds-result-row:last-child { margin-bottom:0; }
-.odds-result-row .val { font-family:'DM Mono',monospace; color:var(--text); }
-.odds-result-row .val.hi { color:var(--amber-hi); font-weight:700; font-size:15px; }
-.btn-save-schedule { width:100%; background:linear-gradient(135deg,var(--rust),var(--amber)); color:var(--bg); font-family:'Playfair Display',serif; font-size:15px; font-weight:700; border:none; border-radius:10px; padding:14px; cursor:pointer; margin-top:10px; transition:opacity .2s; }
-.btn-save-schedule:hover { opacity:.9; }
-
-/* Scheduled display */
-.sched-display { font-size:13px; color:var(--text-dim); }
-.sched-game-row { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--border); }
-.sched-game-row:last-of-type { border-bottom:none; }
-.sched-game-label { color:var(--text-faint); font-size:12px; }
-.sched-game-val { font-family:'DM Mono',monospace; color:var(--text); }
-.sched-odds-summary { margin-top:10px; background:var(--amber-dim); border:1px solid var(--border-hi); border-radius:8px; padding:10px 12px; display:flex; justify-content:space-between; align-items:center; }
-.sched-odds-label { font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--amber); }
-.sched-odds-val { font-family:'Playfair Display',serif; font-size:22px; font-weight:900; color:var(--amber-hi); }
-.sched-result-badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; }
-.sched-result-badge.pending { background:rgba(74,158,219,.15); color:var(--info); border:1px solid var(--info-bd); }
-.sched-result-badge.done    { background:var(--success-bg); color:var(--success); border:1px solid var(--success-bd); }
+/* GAME SCHEDULER */
+.scheduler-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 18px 14px;margin-bottom:16px}
+.scheduler-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.scheduler-title{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--amber);font-weight:600}
+.btn-sch-action{background:none;border:1px solid var(--border-hi);border-radius:8px;padding:5px 12px;font-size:12px;color:var(--amber);cursor:pointer;font-family:'Source Serif 4',serif;transition:all .2s}
+.btn-sch-action:hover{background:var(--amber-dim)}
+.btn-sch-action.danger{border-color:var(--danger-bd);color:var(--danger)}
+.btn-sch-action.danger:hover{background:var(--danger-bg)}
+.legs-row{display:flex;gap:8px;margin-bottom:14px;align-items:center}
+.legs-label{font-size:11px;color:var(--text-faint);letter-spacing:.08em;white-space:nowrap}
+.legs-pills{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-size:13px;color:var(--text-dim);cursor:pointer;transition:all .2s;font-family:'Source Serif 4',serif}
+.pill.active{background:var(--amber-dim);border-color:var(--border-hi);color:var(--amber-hi);font-weight:600}
+.game-field{display:grid;grid-template-columns:auto 1fr 1fr;gap:10px;align-items:center;margin-bottom:10px}
+.game-num{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-faint);width:20px;text-align:center}
+.field-input{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:15px;color:var(--text);outline:none;width:100%;font-family:'DM Mono',monospace;transition:border-color .2s}
+.field-input:focus{border-color:var(--amber)}
+.field-input::placeholder{color:var(--text-faint);font-size:13px}
+.time-wrap{position:relative}
+.time-wrap .field-input{padding-right:36px}
+.time-scroll-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:14px;padding:4px}
+.time-scroll-btn:hover{color:var(--amber)}
+.odds-result{background:var(--surface);border:1px solid var(--border-hi);border-radius:10px;padding:12px 14px;margin:10px 0}
+.odds-result-row{display:flex;justify-content:space-between;font-size:13px;color:var(--text-dim);margin-bottom:4px}
+.odds-result-row:last-child{margin-bottom:0}
+.odds-result-row .val{font-family:'DM Mono',monospace;color:var(--text)}
+.odds-result-row .val.hi{color:var(--amber-hi);font-weight:700;font-size:15px}
+.btn-save-schedule{width:100%;background:linear-gradient(135deg,var(--rust),var(--amber));color:var(--bg);font-family:'Playfair Display',serif;font-size:15px;font-weight:700;border:none;border-radius:10px;padding:14px;cursor:pointer;margin-top:10px;transition:opacity .2s}
+.btn-save-schedule:hover{opacity:.9}
+.sched-display{font-size:13px;color:var(--text-dim)}
+.sched-game-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)}
+.sched-game-row:last-of-type{border-bottom:none}
+.sched-game-label{color:var(--text-faint);font-size:12px}
+.sched-game-val{font-family:'DM Mono',monospace;color:var(--text)}
+.sched-odds-summary{margin-top:10px;background:var(--amber-dim);border:1px solid var(--border-hi);border-radius:8px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center}
+.sched-odds-label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--amber)}
+.sched-odds-val{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:var(--amber-hi)}
+.sched-result-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+.sched-result-badge.pending{background:rgba(74,158,219,.15);color:var(--info);border:1px solid var(--info-bd)}
+.sched-result-badge.done{background:var(--success-bg);color:var(--success);border:1px solid var(--success-bd)}
+.btn-use-sched-odds{width:100%;background:transparent;border:1px solid var(--border-hi);border-radius:10px;padding:11px;font-family:'Source Serif 4',serif;font-size:13px;color:var(--amber);cursor:pointer;margin-top:10px;transition:all .2s}
+.btn-use-sched-odds:hover{background:var(--amber-dim)}
 
 /* Action buttons */
-.action-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px; }
-.btn-win,.btn-loss { border:none; border-radius:16px; padding:22px 12px; font-family:'Playfair Display',serif; font-size:20px; font-weight:700; cursor:pointer; transition:transform .15s,box-shadow .2s,opacity .15s; display:flex; flex-direction:column; align-items:center; gap:6px; }
-.btn-win  { background:linear-gradient(135deg,#1E5C34,var(--success)); color:#fff; box-shadow:0 4px 20px rgba(76,175,114,.2); }
-.btn-loss { background:linear-gradient(135deg,#5C1A0A,var(--danger));  color:#fff; box-shadow:0 4px 20px rgba(224,92,58,.2); }
-.btn-win:hover  { transform:translateY(-2px); box-shadow:0 8px 28px rgba(76,175,114,.35); }
-.btn-loss:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(224,92,58,.35); }
-.btn-win:active,.btn-loss:active { transform:translateY(0); }
-.btn-win .btn-icon-emoji,.btn-loss .btn-icon-emoji { font-size:26px; }
-.btn-win .btn-sub,.btn-loss .btn-sub { font-size:11px; font-family:'Source Serif 4',serif; letter-spacing:.1em; opacity:.8; }
-.btn-win:disabled,.btn-loss:disabled { opacity:.35; cursor:not-allowed; transform:none; }
+.action-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.btn-win,.btn-loss{border:none;border-radius:16px;padding:22px 12px;font-family:'Playfair Display',serif;font-size:20px;font-weight:700;cursor:pointer;transition:transform .15s,box-shadow .2s,opacity .15s;display:flex;flex-direction:column;align-items:center;gap:6px}
+.btn-win{background:linear-gradient(135deg,#1E5C34,var(--success));color:#fff;box-shadow:0 4px 20px rgba(76,175,114,.2)}
+.btn-loss{background:linear-gradient(135deg,#5C1A0A,var(--danger));color:#fff;box-shadow:0 4px 20px rgba(224,92,58,.2)}
+.btn-win:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(76,175,114,.35)}
+.btn-loss:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(224,92,58,.35)}
+.btn-win:active,.btn-loss:active{transform:translateY(0)}
+.btn-icon-emoji{font-size:26px}
+.btn-sub{font-size:11px;font-family:'Source Serif 4',serif;letter-spacing:.1em;opacity:.8}
+.btn-win:disabled,.btn-loss:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.btn-no-game{width:100%;background:transparent;border:1px dashed rgba(250,243,224,.25);border-radius:14px;padding:14px;color:var(--text-faint);font-family:'Source Serif 4',serif;font-size:14px;cursor:pointer;transition:all .2s;margin-bottom:16px}
+.btn-no-game:hover{border-color:rgba(250,243,224,.45);color:var(--cream-dim);background:rgba(250,243,224,.04)}
+.btn-no-game:disabled{opacity:.35;cursor:not-allowed}
+.btn-test-notify{width:100%;background:transparent;border:1px solid rgba(232,160,32,.2);border-radius:10px;padding:11px;font-family:'Source Serif 4',serif;font-size:12px;cursor:pointer;transition:all .2s;margin-bottom:8px;color:rgba(232,160,32,.5)}
+.btn-test-notify:hover{border-color:var(--border-hi);color:var(--amber)}
 
-/* No game / test / reset */
-.btn-no-game { width:100%; background:transparent; border:1px dashed rgba(250,243,224,.25); border-radius:14px; padding:14px; color:var(--text-faint); font-family:'Source Serif 4',serif; font-size:14px; cursor:pointer; transition:all .2s; margin-bottom:16px; }
-.btn-no-game:hover { border-color:rgba(250,243,224,.45); color:var(--cream-dim); background:rgba(250,243,224,.04); }
-.btn-no-game:disabled { opacity:.35; cursor:not-allowed; }
-.btn-test-notify { width:100%; background:transparent; border:1px solid rgba(232,160,32,.2); border-radius:10px; padding:11px; font-family:'Source Serif 4',serif; font-size:12px; cursor:pointer; transition:all .2s; margin-bottom:8px; color:rgba(232,160,32,.5); }
-.btn-test-notify:hover { border-color:var(--border-hi); color:var(--amber); }
+/* ── INTELLIGENCE PANEL ── */
+.intel-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:16px}
+.intel-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.intel-title{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--amber);font-weight:600}
+.intel-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.intel-item{background:var(--surface);border-radius:10px;padding:12px 14px}
+.intel-item-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-faint);margin-bottom:4px}
+.intel-item-val{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--amber-hi);line-height:1}
+.intel-item-sub{font-size:11px;color:var(--text-faint);margin-top:3px}
+.intel-trend{display:flex;align-items:center;gap:6px;font-size:13px}
+.trend-up{color:var(--success)}
+.trend-down{color:var(--danger)}
+.trend-stable{color:var(--text-dim)}
+.intel-proj{background:var(--surface);border-radius:10px;padding:12px 14px}
+.intel-proj-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-faint);margin-bottom:8px}
+.intel-proj-row{display:flex;justify-content:space-between;font-size:13px;color:var(--text-dim);margin-bottom:4px}
+.intel-proj-row:last-child{margin-bottom:0;padding-top:6px;border-top:1px solid var(--border);font-weight:600}
+.intel-proj-row .pval{font-family:'DM Mono',monospace;color:var(--text)}
+.intel-proj-row .pval.pos{color:var(--success)}
+.intel-proj-row .pval.neg{color:var(--danger)}
+.intel-score{display:inline-flex;align-items:center;gap:4px}
+.score-bar{width:60px;height:6px;background:var(--surface);border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle;margin-left:6px}
+.score-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--rust),var(--amber));transition:width .5s ease}
 
 /* Stats strip */
-.stats-strip { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:16px; }
-.stat-mini { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:12px 6px; text-align:center; }
-.stat-mini .sm-val { font-family:'Playfair Display',serif; font-size:20px; font-weight:700; color:var(--amber-hi); line-height:1; }
-.stat-mini .sm-lbl { font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-faint); margin-top:4px; }
+.stats-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+.stat-mini{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 6px;text-align:center}
+.stat-mini .sm-val{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--amber-hi);line-height:1}
+.stat-mini .sm-lbl{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-faint);margin-top:4px}
 
 /* History */
-.history-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; margin-top:20px; }
-.history-title { font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--amber); font-weight:600; }
-.btn-clear { font-size:11px; color:var(--text-faint); background:none; border:1px solid var(--border); border-radius:6px; padding:4px 10px; cursor:pointer; font-family:'Source Serif 4',serif; transition:all .2s; }
-.btn-clear:hover { color:var(--danger); border-color:var(--danger-bd); }
-.history-list { display:flex; flex-direction:column; gap:8px; }
-.hist-empty { text-align:center; color:var(--text-faint); font-size:14px; font-style:italic; padding:28px 0; }
-.hist-item { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px 16px; display:flex; justify-content:space-between; align-items:center; animation:fadeUp .3s ease; }
-.hist-item.win-item   { border-color:var(--success-bd); }
-.hist-item.loss-item  { border-color:var(--danger-bd); }
-.hist-item.bust-item  { border-color:rgba(155,58,16,.5); background:var(--danger-bg); }
-.hist-item.nogame-item{ border-color:rgba(250,243,224,.08); opacity:.65; }
-.hist-left { display:flex; flex-direction:column; gap:3px; }
-.hist-cycle { font-size:11px; color:var(--text-faint); letter-spacing:.08em; }
-.hist-desc  { font-size:14px; color:var(--text); font-weight:600; }
-.hist-right { text-align:right; }
-.hist-amount { font-family:'Playfair Display',serif; font-size:16px; font-weight:700; }
-.hist-amount.pos { color:var(--success); }
-.hist-amount.neg { color:var(--danger); }
-.hist-bk { font-size:11px; color:var(--text-faint); margin-top:2px; }
+.history-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;margin-top:20px}
+.history-title{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--amber);font-weight:600}
+.btn-clear{font-size:11px;color:var(--text-faint);background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer;font-family:'Source Serif 4',serif;transition:all .2s}
+.btn-clear:hover{color:var(--danger);border-color:var(--danger-bd)}
+.history-list{display:flex;flex-direction:column;gap:8px}
+.hist-empty{text-align:center;color:var(--text-faint);font-size:14px;font-style:italic;padding:28px 0}
+.hist-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;animation:fadeUp .3s ease}
+.hist-item.win-item{border-color:var(--success-bd)}
+.hist-item.recovery-item{border-color:var(--recovery-bd);background:rgba(43,21,0,.4)}
+.hist-item.loss-item{border-color:var(--danger-bd)}
+.hist-item.bust-item{border-color:rgba(155,58,16,.5);background:var(--danger-bg)}
+.hist-item.nogame-item{border-color:rgba(250,243,224,.08);opacity:.65}
+.hist-left{display:flex;flex-direction:column;gap:3px}
+.hist-cycle{font-size:11px;color:var(--text-faint);letter-spacing:.08em}
+.hist-desc{font-size:14px;color:var(--text);font-weight:600}
+.hist-odds{font-size:11px;color:var(--text-faint);font-family:'DM Mono',monospace}
+.hist-right{text-align:right}
+.hist-amount{font-family:'Playfair Display',serif;font-size:16px;font-weight:700}
+.hist-amount.pos{color:var(--success)}
+.hist-amount.neg{color:var(--danger)}
+.hist-amount.rec{color:var(--recovery)}
+.hist-bk{font-size:11px;color:var(--text-faint);margin-top:2px}
+
+.bottom-links{text-align:center;margin-top:28px;display:flex;justify-content:center;gap:20px}
+.btn-reset-link{background:none;border:none;font-size:12px;color:var(--text-faint);cursor:pointer;text-decoration:underline;font-family:'Source Serif 4',serif}
+.btn-reset-link:hover{color:var(--danger)}
+.btn-signout-link{background:none;border:none;font-size:12px;color:var(--text-faint);cursor:pointer;text-decoration:underline;font-family:'Source Serif 4',serif}
+.btn-signout-link:hover{color:var(--amber)}
 
 /* Toast */
-.toast { position:fixed; bottom:30px; left:50%; transform:translateX(-50%) translateY(80px); background:var(--card); border:1px solid var(--border-hi); border-radius:12px; padding:14px 24px; font-size:15px; color:var(--text); box-shadow:0 8px 32px rgba(0,0,0,.4); transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .35s; opacity:0; z-index:999; white-space:nowrap; max-width:90vw; text-align:center; }
-.toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--card);border:1px solid var(--border-hi);border-radius:12px;padding:14px 24px;font-size:15px;color:var(--text);box-shadow:0 8px 32px rgba(0,0,0,.4);transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .35s;opacity:0;z-index:999;white-space:nowrap;max-width:90vw;text-align:center}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 
 /* Overlay / modal */
-.overlay { position:fixed; inset:0; background:rgba(0,0,0,.75); display:none; align-items:center; justify-content:center; z-index:100; padding:24px; }
-.overlay.show { display:flex; }
-.modal { background:var(--card); border:1px solid var(--border-hi); border-radius:20px; padding:32px 28px; max-width:360px; width:100%; animation:fadeUp .3s ease; box-shadow:0 0 60px rgba(232,160,32,.1); }
-.modal h3 { font-family:'Playfair Display',serif; font-size:22px; font-weight:900; margin-bottom:10px; }
-.modal h3.red   { color:var(--danger); }
-.modal h3.amber { color:var(--amber-hi); }
-.modal p { font-size:14px; color:var(--text-dim); line-height:1.6; margin-bottom:20px; }
-.modal-row { display:flex; gap:12px; }
-.btn-modal { flex:1; padding:14px; border-radius:12px; font-family:'Playfair Display',serif; font-size:15px; font-weight:700; border:none; cursor:pointer; transition:opacity .2s; }
-.btn-modal:hover { opacity:.85; }
-.btn-modal.confirm { background:var(--danger); color:#fff; }
-.btn-modal.cancel  { background:var(--surface); color:var(--text-dim); border:1px solid var(--border); }
-.btn-modal.ok      { background:linear-gradient(135deg,var(--rust),var(--amber)); color:var(--bg); }
-.bust-details { background:var(--danger-bg); border:1px solid var(--danger-bd); border-radius:10px; padding:14px 16px; margin:14px 0; font-size:13px; color:var(--text-dim); line-height:1.7; }
-.bust-details .row { display:flex; justify-content:space-between; }
-.bust-details .row span:last-child { color:var(--text); font-weight:600; }
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:100;padding:24px}
+.overlay.show{display:flex}
+.modal{background:var(--card);border:1px solid var(--border-hi);border-radius:20px;padding:32px 28px;max-width:360px;width:100%;animation:fadeUp .3s ease;box-shadow:0 0 60px rgba(232,160,32,.1);max-height:90vh;overflow-y:auto}
+.modal h3{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;margin-bottom:10px}
+.modal h3.red{color:var(--danger)}
+.modal h3.amber{color:var(--amber-hi)}
+.modal h3.teal{color:var(--info)}
+.modal p{font-size:14px;color:var(--text-dim);line-height:1.6;margin-bottom:20px}
+.modal-row{display:flex;gap:12px}
+.btn-modal{flex:1;padding:14px;border-radius:12px;font-family:'Playfair Display',serif;font-size:15px;font-weight:700;border:none;cursor:pointer;transition:opacity .2s}
+.btn-modal:hover{opacity:.85}
+.btn-modal.confirm{background:var(--danger);color:#fff}
+.btn-modal.cancel{background:var(--surface);color:var(--text-dim);border:1px solid var(--border)}
+.btn-modal.ok{background:linear-gradient(135deg,var(--rust),var(--amber));color:var(--bg)}
+.bust-details{background:var(--danger-bg);border:1px solid var(--danger-bd);border-radius:10px;padding:14px 16px;margin:14px 0;font-size:13px;color:var(--text-dim);line-height:1.7}
+.bust-details .row{display:flex;justify-content:space-between}
+.bust-details .row span:last-child{color:var(--text);font-weight:600}
+.modal-stat-grid{display:grid;gap:5px;font-size:13px;color:var(--text-dim)}
+.modal-stat-row{display:flex;justify-content:space-between;padding:4px 0}
+.modal-stat-row:not(:last-child){border-bottom:1px solid var(--border)}
+.modal-stat-row .msval{color:var(--text);font-family:'DM Mono',monospace}
+.modal-stat-row .msval.pos{color:var(--success)}
+.modal-stat-row .msval.neg{color:var(--danger)}
+.modal-stat-row .msval.amb{color:var(--amber-hi)}
+.modal-divider{border:none;border-top:1px solid var(--border);margin:10px 0}
 
-/* Time scroll picker overlay */
-.time-picker-overlay { position:fixed; inset:0; background:rgba(0,0,0,.75); display:none; align-items:flex-end; justify-content:center; z-index:200; }
-.time-picker-overlay.show { display:flex; }
-.time-picker-sheet { background:var(--card); border:1px solid var(--border-hi); border-radius:20px 20px 0 0; padding:20px 24px 36px; width:100%; max-width:480px; animation:slideUp .3s ease; }
-.tps-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
-.tps-title { font-family:'Playfair Display',serif; font-size:17px; font-weight:700; color:var(--amber-hi); }
-.tps-target { font-size:12px; color:var(--text-faint); }
-.tps-close { background:none; border:none; color:var(--text-faint); cursor:pointer; font-size:20px; }
-.tps-cols { display:flex; gap:12px; justify-content:center; }
-.tps-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; }
-.tps-col-label { font-size:10px; letter-spacing:.15em; text-transform:uppercase; color:var(--text-faint); margin-bottom:6px; }
-.tps-scroll { height:200px; overflow-y:scroll; scroll-snap-type:y mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none; width:100%; }
-.tps-scroll::-webkit-scrollbar { display:none; }
-.tps-item { scroll-snap-align:center; height:44px; display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:20px; color:var(--text-faint); cursor:pointer; transition:color .15s; border-radius:8px; }
-.tps-item.selected { color:var(--amber-hi); font-weight:700; background:var(--amber-dim); }
-.tps-confirm { width:100%; background:linear-gradient(135deg,var(--rust),var(--amber)); color:var(--bg); font-family:'Playfair Display',serif; font-size:16px; font-weight:700; border:none; border-radius:12px; padding:16px; cursor:pointer; margin-top:16px; }
-.tps-confirm:hover { opacity:.9; }
+/* Change Key modal */
+.modal-field{margin-bottom:16px}
+.modal-input-wrap{position:relative}
+.modal-input{width:100%;background:var(--surface);border:2px solid var(--border-hi);border-radius:10px;padding:13px 46px 13px 16px;font-size:15px;color:var(--text);outline:none;transition:border-color .2s;font-family:'DM Mono',monospace;letter-spacing:.06em}
+.modal-input:focus{border-color:var(--amber)}
+.modal-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:16px}
+.modal-remember{display:flex;align-items:center;gap:8px;margin-bottom:20px;cursor:pointer;user-select:none}
+.modal-remember input[type=checkbox]{width:16px;height:16px;accent-color:var(--amber);cursor:pointer}
+.modal-remember span{font-size:13px;color:var(--text-dim)}
 
-/* Reset button */
-.btn-reset-link { background:none; border:none; font-size:12px; color:var(--text-faint); cursor:pointer; text-decoration:underline; font-family:'Source Serif 4',serif; }
-.btn-reset-link:hover { color:var(--danger); }
+/* Time picker */
+.time-picker-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:flex-end;justify-content:center;z-index:200}
+.time-picker-overlay.show{display:flex}
+.time-picker-sheet{background:var(--card);border:1px solid var(--border-hi);border-radius:20px 20px 0 0;padding:20px 24px 36px;width:100%;max-width:480px;animation:slideUp .3s ease}
+.tps-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.tps-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--amber-hi)}
+.tps-target{font-size:12px;color:var(--text-faint)}
+.tps-close{background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:20px}
+.tps-cols{display:flex;gap:12px;justify-content:center}
+.tps-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.tps-col-label{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--text-faint);margin-bottom:6px}
+.tps-scroll{height:200px;overflow-y:scroll;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;width:100%}
+.tps-scroll::-webkit-scrollbar{display:none}
+.tps-item{scroll-snap-align:center;height:44px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:20px;color:var(--text-faint);cursor:pointer;transition:color .15s;border-radius:8px}
+.tps-item.selected{color:var(--amber-hi);font-weight:700;background:var(--amber-dim)}
+.tps-confirm{width:100%;background:linear-gradient(135deg,var(--rust),var(--amber));color:var(--bg);font-family:'Playfair Display',serif;font-size:16px;font-weight:700;border:none;border-radius:12px;padding:16px;cursor:pointer;margin-top:16px}
+.tps-confirm:hover{opacity:.9}
 
-@keyframes fadeUp  { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
-@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
-@keyframes pulse   { 0%,100%{box-shadow:0 0 0 0 rgba(232,160,32,.4)} 50%{box-shadow:0 0 0 10px rgba(232,160,32,0)} }
-.pulse { animation:pulse 2s infinite; }
-::-webkit-scrollbar { width:4px; }
-::-webkit-scrollbar-track { background:transparent; }
-::-webkit-scrollbar-thumb { background:var(--border-hi); border-radius:4px; }
-@media(max-width:400px){ .stake-amount{font-size:38px} .bk-amount{font-size:34px} .stats-strip{grid-template-columns:repeat(2,1fr)} }
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(232,160,32,.4)}50%{box-shadow:0 0 0 10px rgba(232,160,32,0)}}
+.pulse{animation:pulse 2s infinite}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border-hi);border-radius:4px}
+@media(max-width:400px){.stake-amount{font-size:38px}.bk-amount{font-size:34px}.stats-strip{grid-template-columns:repeat(2,1fr)}.intel-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 
-<!-- ═══════════ SETUP ═══════════ -->
-<div id="setup" class="screen active">
+<!-- AUTH -->
+<div id="auth" class="screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="icon">🔐</div>
+      <h1>CRS Tracker</h1>
+      <p>ADAPTATION v3.0 — Enter your access key</p>
+    </div>
+    <div class="field-label">Access Key</div>
+    <div class="secret-wrap" style="margin-bottom:16px">
+      <input class="secret-input" type="password" id="secretInput" placeholder="••••••••••••" autocomplete="current-password">
+      <button class="btn-eye" onclick="toggleEye('secretInput','eyeIcon1')" id="eyeIcon1">👁</button>
+    </div>
+    <div class="auth-err" id="authErr">Incorrect key. Please try again.</div>
+    <label class="remember-row">
+      <input type="checkbox" id="rememberMe" checked>
+      <span>Stay signed in for 30 days (cloud session)</span>
+    </label>
+    <button class="btn-primary" id="authBtn" onclick="authenticate()">Unlock →</button>
+  </div>
+</div>
+
+<!-- SETUP -->
+<div id="setup" class="screen">
   <div class="setup-card">
     <div class="setup-logo">
       <div class="icon">📈</div>
       <h1>CRS Tracker</h1>
-      <p>Compound Recovery System — Automated</p>
+      <p>ADAPTATION — Set your starting bankroll</p>
     </div>
-    <div class="field-label">Enter Your Starting Bankroll</div>
+    <div class="field-label">Starting Bankroll</div>
     <div class="bankroll-input-wrap">
       <span class="currency-sym">₦</span>
       <input type="number" id="bankrollInput" placeholder="10000" min="2001" step="100">
     </div>
     <div class="setup-info">
-      <strong>You only do this once.</strong> The system remembers your bankroll, tracks every bet, and always tells you exactly what to stake next.
+      <strong>One-time setup.</strong> The system remembers everything — bankroll, cycles, history, and your rolling odds average. Stakes are computed live from each day's ticket.
     </div>
     <button class="btn-primary" onclick="initSystem()">Start Tracking →</button>
   </div>
 </div>
 
-<!-- ═══════════ MAIN ═══════════ -->
+<!-- MAIN -->
 <div id="main" class="screen">
 
   <div class="top-bar">
@@ -294,38 +413,39 @@ body { background:var(--bg); color:var(--text); font-family:'Source Serif 4',Geo
     <div class="top-bar-actions">
       <button class="btn-pause" id="pauseBtn" onclick="togglePause()">⏸ Pause</button>
       <button class="btn-icon" onclick="showStats()" title="Stats">📊</button>
+      <button class="btn-icon" onclick="showIntelModal()" title="Intelligence">🧠</button>
+      <button class="btn-icon" onclick="openChangeKey()" title="Security">🔐</button>
       <button class="btn-icon" onclick="confirmReset()" title="Reset">↺</button>
     </div>
   </div>
 
-  <!-- Pending result banner -->
+  <!-- Banners -->
   <div class="banner banner-danger" id="pendingBanner">
     <span class="bi">⚠️</span>
-    <span>Yesterday's games were never logged. Enter the result below before logging today.</span>
+    <span id="pendingText">A previous game was never logged. Enter the result below before continuing.</span>
   </div>
-
-  <!-- Missed day banner -->
-  <div class="banner banner-info" id="missedBanner">
-    <span class="bi">📅</span>
-    <span id="missedText">A previous day was missed. Your streak has been reset.</span>
-  </div>
-
-  <!-- Low bankroll warning -->
   <div class="banner banner-warn" id="warnBanner">
     <span class="bi">⚠️</span>
     <span id="warnText"></span>
   </div>
+  <div class="banner banner-recovery" id="recoveryBanner">
+    <span class="bi">🟡</span>
+    <span id="recoveryText"></span>
+  </div>
 
   <!-- Bankroll card -->
   <div class="bankroll-card">
-    <div class="bk-label">Current Bankroll</div>
+    <div class="bk-top">
+      <div class="bk-label">Current Bankroll</div>
+      <div class="bk-badge" id="bkBadge">Cycle #1</div>
+    </div>
     <div class="bk-amount"><span class="sym">₦</span><span id="bkAmount">0</span></div>
     <div class="bk-delta" id="bkDelta">Starting balance</div>
   </div>
 
   <!-- Round tracker -->
   <div class="round-track">
-    <div class="round-dots">
+    <div class="round-dots" id="roundDots">
       <div class="rdot" id="dot1"></div>
       <div class="rdot" id="dot2"></div>
       <div class="rdot" id="dot3"></div>
@@ -336,14 +456,51 @@ body { background:var(--bg); color:var(--text); font-family:'Source Serif 4',Geo
     </div>
   </div>
 
-  <!-- Stake card -->
-  <div class="stake-card pulse" id="stakeCard">
-    <div class="stake-label">Stake This Bet</div>
-    <div class="stake-amount"><span class="sym">₦</span><span id="stakeAmt">0</span></div>
-    <div class="stake-sub" id="stakeSub">—</div>
+  <!-- TICKET ENTRY (shown when stake not locked) -->
+  <div class="ticket-card" id="ticketCard" style="display:none">
+    <div class="ticket-header">
+      <div class="ticket-title" id="ticketTitle">Enter Today's Ticket Odds</div>
+      <div class="ticket-avg">Baseline: <span id="ticketAvgDisplay">1.70</span></div>
+    </div>
+    <div class="ticket-input-wrap">
+      <span class="ticket-prefix">ODDS</span>
+      <input type="number" class="ticket-input" id="ticketOddsInput" placeholder="1.70" min="1.01" max="50" step="0.01" oninput="onTicketInput()">
+    </div>
+    <div class="ticket-preview" id="ticketPreview">
+      <div class="ticket-preview-row">
+        <span>Mode</span>
+        <span id="tpMode">—</span>
+      </div>
+      <div class="ticket-preview-row">
+        <span>Odds ratio</span>
+        <span class="tval" id="tpRatio">—</span>
+      </div>
+      <div class="ticket-preview-row" id="tpTargetRow">
+        <span>Profit target</span>
+        <span class="tval" id="tpTarget">—</span>
+      </div>
+      <div class="ticket-preview-row">
+        <span>Stake to place</span>
+        <span class="tval hi" id="tpStake">—</span>
+      </div>
+    </div>
+    <div class="ticket-warn" id="ticketWarn"></div>
+    <button class="btn-lock-stake" id="btnLockStake" onclick="lockStake()" disabled>Lock Stake</button>
+    <div class="ticket-hint" id="ticketHint">Enter the effective odds from your ticket above</div>
   </div>
 
-  <!-- ═══ GAME SCHEDULER ═══ -->
+  <!-- STAKE CARD (shown when stake is locked) -->
+  <div class="stake-card pulse" id="stakeCard" style="display:none">
+    <div class="stake-top">
+      <div class="stake-label">Stake This Bet</div>
+      <div id="stakeModeBadge"></div>
+    </div>
+    <div class="stake-amount"><span class="sym">₦</span><span id="stakeAmt">0</span></div>
+    <div class="stake-sub" id="stakeSub">—</div>
+    <div class="stake-odds-tag" id="stakeOddsTag"></div>
+  </div>
+
+  <!-- GAME SCHEDULER -->
   <div class="scheduler-card" id="schedulerCard">
     <div class="scheduler-header">
       <div class="scheduler-title">Today's Games</div>
@@ -372,7 +529,7 @@ body { background:var(--bg); color:var(--text); font-family:'Source Serif 4',Geo
 
   <!-- Win / Loss -->
   <div class="action-row">
-    <button class="btn-win"  id="btnWin"  onclick="recordResult('win')">
+    <button class="btn-win" id="btnWin" onclick="recordResult('win')">
       <span class="btn-icon-emoji">✅</span>
       <span>WIN</span>
       <span class="btn-sub">Bet came through</span>
@@ -392,6 +549,32 @@ body { background:var(--bg); color:var(--text); font-family:'Source Serif 4',Geo
     🔔 &nbsp;Send test Telegram notification
   </button>
 
+  <!-- Intelligence panel -->
+  <div class="intel-card" id="intelCard">
+    <div class="intel-header">
+      <div class="intel-title">🧠 Intelligence</div>
+      <button class="btn-sch-action" onclick="showIntelModal()">Full Report</button>
+    </div>
+    <div class="intel-grid">
+      <div class="intel-item">
+        <div class="intel-item-label">Rolling Avg Odds</div>
+        <div class="intel-item-val" id="intelAvg">1.70</div>
+        <div class="intel-item-sub" id="intelTrend">—</div>
+      </div>
+      <div class="intel-item">
+        <div class="intel-item-label">Agent Score</div>
+        <div class="intel-item-val" id="intelScore">—</div>
+        <div class="intel-item-sub">out of 100</div>
+      </div>
+    </div>
+    <div class="intel-proj">
+      <div class="intel-proj-label">Projection (based on your data)</div>
+      <div class="intel-proj-row"><span>Weekly</span><span class="pval" id="projWeekly">—</span></div>
+      <div class="intel-proj-row"><span>Monthly</span><span class="pval" id="projMonthly">—</span></div>
+      <div class="intel-proj-row"><span>Recommended BK</span><span class="pval" id="projRecBK">—</span></div>
+    </div>
+  </div>
+
   <!-- Stats strip -->
   <div class="stats-strip">
     <div class="stat-mini"><div class="sm-val" id="statCycles">0</div><div class="sm-lbl">Cycles</div></div>
@@ -406,19 +589,20 @@ body { background:var(--bg); color:var(--text); font-family:'Source Serif 4',Geo
     <button class="btn-clear" onclick="clearHistory()">Clear log</button>
   </div>
   <div class="history-list" id="histList">
-    <div class="hist-empty">No bets recorded yet.<br>Your history will appear here.</div>
+    <div class="hist-empty">No bets recorded yet.</div>
   </div>
 
-  <div style="text-align:center;margin-top:28px;">
-    <button class="btn-reset-link" onclick="confirmReset()">Reset &amp; start over</button>
+  <div class="bottom-links">
+    <button class="btn-signout-link" onclick="signOut()">🔐 Sign out</button>
+    <button class="btn-reset-link" onclick="confirmReset()">↺ Reset &amp; start over</button>
   </div>
 </div>
 
 <!-- Bust modal -->
 <div class="overlay" id="bustOverlay">
   <div class="modal">
-    <h3 class="red">💥 Bust — Cycle Failed</h3>
-    <p>All 3 rounds lost. The system scales your new stakes down to match your reduced bankroll.</p>
+    <h3 class="red" id="bustTitle">💥 Bust — Cycle Failed</h3>
+    <p id="bustDesc">All rounds exhausted. System scales stakes to your new bankroll.</p>
     <div class="bust-details" id="bustDetails"></div>
     <div class="modal-row"><button class="btn-modal ok" onclick="closeBust()">Got it — Reset Cycle</button></div>
   </div>
@@ -437,9 +621,20 @@ body { background:var(--bg); color:var(--text); font-family:'Source Serif 4',Geo
 <div class="overlay" id="statsOverlay">
   <div class="modal">
     <h3 class="amber">📊 Full Stats</h3>
-    <div id="statsContent" style="font-size:14px;color:var(--text-dim);line-height:2;"></div>
-    <div class="modal-row" style="margin-top:20px;">
-      <button class="btn-modal ok" onclick="document.getElementById('statsOverlay').classList.remove('show')">Close</button>
+    <div id="statsContent" class="modal-stat-grid"></div>
+    <div class="modal-row" style="margin-top:20px">
+      <button class="btn-modal ok" onclick="closeOverlay('statsOverlay')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Intel modal -->
+<div class="overlay" id="intelOverlay">
+  <div class="modal">
+    <h3 class="teal">🧠 Intelligence Report</h3>
+    <div id="intelContent" class="modal-stat-grid"></div>
+    <div class="modal-row" style="margin-top:20px">
+      <button class="btn-modal ok" onclick="closeOverlay('intelOverlay')">Close</button>
     </div>
   </div>
 </div>
@@ -448,15 +643,34 @@ body { background:var(--bg); color:var(--text); font-family:'Source Serif 4',Geo
 <div class="overlay" id="resetOverlay">
   <div class="modal">
     <h3 class="red">Reset Everything?</h3>
-    <p>This erases your bankroll, history, and all stats. Cannot be undone.</p>
+    <p>This erases your bankroll, history, odds log, and all stats. Cannot be undone.</p>
     <div class="modal-row">
-      <button class="btn-modal cancel" onclick="document.getElementById('resetOverlay').classList.remove('show')">Cancel</button>
+      <button class="btn-modal cancel" onclick="closeOverlay('resetOverlay')">Cancel</button>
       <button class="btn-modal confirm" onclick="hardReset()">Yes, Reset</button>
     </div>
   </div>
 </div>
 
-<!-- Time picker sheet -->
+<!-- Change Key modal -->
+<div class="overlay" id="keyOverlay">
+  <div class="modal">
+    <h3 class="amber">🔐 Change Access Key</h3>
+    <p style="margin-bottom:16px">Enter a new key. Your cloud session continues — no re-login needed.</p>
+    <div class="modal-field">
+      <div class="field-label">New Access Key</div>
+      <div class="modal-input-wrap">
+        <input class="modal-input" type="password" id="newKeyInput" placeholder="Enter new key" autocomplete="new-password">
+        <button class="modal-eye" onclick="toggleEye('newKeyInput','eyeIcon2')" id="eyeIcon2">👁</button>
+      </div>
+    </div>
+    <div class="modal-row">
+      <button class="btn-modal cancel" onclick="closeOverlay('keyOverlay')">Cancel</button>
+      <button class="btn-modal ok" onclick="saveNewKey()">Save Key</button>
+    </div>
+  </div>
+</div>
+
+<!-- Time picker -->
 <div class="time-picker-overlay" id="timePickerOverlay">
   <div class="time-picker-sheet">
     <div class="tps-header">
@@ -467,146 +681,450 @@ body { background:var(--bg); color:var(--text); font-family:'Source Serif 4',Geo
       <button class="tps-close" onclick="closeTimePicker()">✕</button>
     </div>
     <div class="tps-cols">
-      <div class="tps-col">
-        <div class="tps-col-label">Hour</div>
-        <div class="tps-scroll" id="tpsHours"></div>
-      </div>
-      <div class="tps-col">
-        <div class="tps-col-label">Min</div>
-        <div class="tps-scroll" id="tpsMins"></div>
-      </div>
-      <div class="tps-col">
-        <div class="tps-col-label">AM/PM</div>
-        <div class="tps-scroll" id="tpsAmPm"></div>
-      </div>
+      <div class="tps-col"><div class="tps-col-label">Hour</div><div class="tps-scroll" id="tpsHours"></div></div>
+      <div class="tps-col"><div class="tps-col-label">Min</div><div class="tps-scroll" id="tpsMins"></div></div>
+      <div class="tps-col"><div class="tps-col-label">AM/PM</div><div class="tps-scroll" id="tpsAmPm"></div></div>
     </div>
     <button class="tps-confirm" onclick="confirmTimePicker()">Confirm Time</button>
   </div>
 </div>
 
-<!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <script>
-// ═══════════════════════════════════════════
-//  TELEGRAM MINI APP INIT
-// ═══════════════════════════════════════════
+// ─────────────────────────────────────────────
+//  TELEGRAM MINI APP
+// ─────────────────────────────────────────────
 const tg = window.Telegram && window.Telegram.WebApp;
 if (tg) { tg.ready(); tg.expand(); }
 
-// ═══════════════════════════════════════════
+// ─────────────────────────────────────────────
 //  CONFIG
-// ═══════════════════════════════════════════
-const API = 'https://crstracker-production.up.railway.app';
+// ─────────────────────────────────────────────
+const API         = 'https://crstracker-production.up.railway.app';
+const SESSION_KEY = 'crs_session_token'; // Only the token lives in localStorage — never the key
 
-// ═══════════════════════════════════════════
-//  STATE
-// ═══════════════════════════════════════════
-let S = null;
-let _busy = false;
-let _currentLegs = 3;
-let _timePickerTarget = null; // game index
+// ─────────────────────────────────────────────
+//  GLOBAL STATE
+// ─────────────────────────────────────────────
+let S        = null;   // Main state from server
+let INTEL    = null;   // Intelligence data from server
+let _busy    = false;
+let _session = '';     // Cloud session token
+let _secret  = '';     // Master key (only in memory, never persisted)
+let _currentLegs      = 3;
+let _timePickerTarget = null;
+let _previewDebounce  = null;
 
-// ═══════════════════════════════════════════
-//  API CALLS
-// ═══════════════════════════════════════════
-async function apiGet()              { const r = await fetch(`${API}/api/state`);  if (r.status===404) return null; if (!r.ok) throw new Error('Server error'); return (await r.json()).state; }
-async function apiInit(bankroll)     { const r = await fetch(`${API}/api/init`,    {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({bankroll})}); if (!r.ok){const e=await r.json();throw new Error(e.error);} return (await r.json()).state; }
-async function apiResult(outcome)    { const r = await fetch(`${API}/api/result`,  {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({outcome})}); if (!r.ok){const e=await r.json();throw new Error(e.error||e.message);} return await r.json(); }
-async function apiNoGame()           { const r = await fetch(`${API}/api/no-game`, {method:'POST'}); if (!r.ok){const e=await r.json();throw new Error(e.error||e.message);} return (await r.json()).state; }
-async function apiDelete()           { await fetch(`${API}/api/state`,   {method:'DELETE'}); }
-async function apiClearHistory()     { await fetch(`${API}/api/history`, {method:'DELETE'}); }
-async function apiPause(pause)       { const r = await fetch(`${API}/api/pause`,   {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pause})}); if (!r.ok) throw new Error('Pause toggle failed'); return await r.json(); }
-async function apiSaveSchedule(games){ const r = await fetch(`${API}/api/schedule`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({games})}); if (!r.ok){const e=await r.json();throw new Error(e.error);} return await r.json(); }
-async function apiDeleteSchedule()   { await fetch(`${API}/api/schedule`, {method:'DELETE'}); }
-async function apiCalcOdds(legs)     { const r = await fetch(`${API}/api/calc-odds`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({legs})}); if (!r.ok) throw new Error('Calc failed'); return await r.json(); }
+// ─────────────────────────────────────────────
+//  CLOUD SESSION AUTH
+// ─────────────────────────────────────────────
+function loadSession() {
+  _session = localStorage.getItem(SESSION_KEY) || '';
+}
 
-// ═══════════════════════════════════════════
-//  INIT
-// ═══════════════════════════════════════════
-window.addEventListener('load', async () => {
-  document.getElementById('dateLabel').textContent = new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+function saveSession(token) {
+  _session = token;
+  localStorage.setItem(SESSION_KEY, token);
+}
+
+function clearSession() {
+  _session = '';
+  localStorage.removeItem(SESSION_KEY);
+}
+
+function authHeaders(withBody = false) {
+  const h = {};
+  if (_session) h['x-crs-session'] = _session;
+  else if (_secret) h['x-crs-secret'] = _secret;
+  if (withBody) h['Content-Type'] = 'application/json';
+  return h;
+}
+
+async function safeFetch(url, opts = {}) {
+  opts.headers = { ...(opts.headers || {}), ...authHeaders() };
+  const r = await fetch(url, opts);
+  if (r.status === 401) { handleUnauth(); throw new Error('unauthorized'); }
+  return r;
+}
+
+function handleUnauth() {
+  clearSession();
+  _secret = '';
+  S = null;
+  showScreen('auth');
+  showToast('⚠️ Session expired. Please sign in again.');
+  document.getElementById('secretInput').value = '';
+  document.getElementById('authErr').classList.remove('show');
+}
+
+async function signOut() {
   try {
-    S = await apiGet();
-    if (S) { showScreen('main'); renderAll(); }
-    else showScreen('setup');
-  } catch (e) { showToast('⚠️ Could not reach server.'); showScreen('setup'); }
+    if (_session) await safeFetch(`${API}/api/session`, { method: 'DELETE' });
+  } catch (_) {}
+  clearSession();
+  _secret = '';
+  S = null;
+  showScreen('auth');
+  document.getElementById('secretInput').value = '';
+  document.getElementById('authErr').classList.remove('show');
+}
+
+function toggleEye(inputId, btnId) {
+  const inp = document.getElementById(inputId);
+  const btn = document.getElementById(btnId);
+  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
+  else { inp.type = 'password'; btn.textContent = '👁'; }
+}
+
+async function authenticate() {
+  const val = document.getElementById('secretInput').value.trim();
+  if (!val) {
+    document.getElementById('authErr').textContent = 'Please enter your access key.';
+    document.getElementById('authErr').classList.add('show'); return;
+  }
+  document.getElementById('authErr').classList.remove('show');
+  const btn = document.getElementById('authBtn');
+  btn.textContent = 'Verifying…'; btn.disabled = true;
+  _secret = val;
+
+  try {
+    // Create cloud session if remember-me checked
+    if (document.getElementById('rememberMe').checked) {
+      const r = await fetch(`${API}/api/session/create`, {
+        method: 'POST', headers: { 'x-crs-secret': val }
+      });
+      if (r.status === 401) throw new Error('unauthorized');
+      if (r.ok) { const d = await r.json(); saveSession(d.token); _secret = ''; }
+    }
+    await loadApp(true);
+  } catch (e) {
+    if (e.message === 'unauthorized') {
+      _secret = ''; clearSession();
+      document.getElementById('authErr').textContent = 'Incorrect key. Please try again.';
+      document.getElementById('authErr').classList.add('show');
+    } else {
+      showToast('⚠️ Could not reach server.');
+    }
+    btn.textContent = 'Unlock →'; btn.disabled = false;
+  }
+}
+
+function openChangeKey() {
+  document.getElementById('newKeyInput').value = '';
+  document.getElementById('newKeyInput').type = 'password';
+  document.getElementById('eyeIcon2').textContent = '👁';
+  document.getElementById('keyOverlay').classList.add('show');
+}
+
+function saveNewKey() {
+  const val = document.getElementById('newKeyInput').value.trim();
+  if (!val) { showToast('⚠️ Enter a new key.'); return; }
+  _secret = val;
+  closeOverlay('keyOverlay');
+  showToast('✅ Key updated in memory.');
+}
+
+// ─────────────────────────────────────────────
+//  API HELPERS
+// ─────────────────────────────────────────────
+async function apiGetState() {
+  const r = await safeFetch(`${API}/api/state`);
+  if (r.status === 404) return { state: null, intel: null };
+  if (!r.ok) throw new Error('Server error');
+  return await r.json(); // { state, intel }
+}
+async function apiInit(bankroll) {
+  const r = await safeFetch(`${API}/api/init`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({bankroll}) });
+  if (!r.ok) { const e = await r.json(); throw new Error(e.error); }
+  return (await r.json()).state;
+}
+async function apiTicket(odds) {
+  const r = await safeFetch(`${API}/api/ticket`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({odds}) });
+  if (!r.ok) { const e = await r.json(); throw new Error(e.error); }
+  return await r.json(); // { state, stakeInfo, event? }
+}
+async function apiResult(outcome) {
+  const r = await safeFetch(`${API}/api/result`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({outcome}) });
+  if (!r.ok) { const e = await r.json(); throw new Error(e.error || e.message); }
+  return await r.json();
+}
+async function apiNoGame() {
+  const r = await safeFetch(`${API}/api/no-game`, { method:'POST' });
+  if (!r.ok) { const e = await r.json(); throw new Error(e.error || e.message); }
+  return (await r.json()).state;
+}
+async function apiDelete() { await safeFetch(`${API}/api/state`, { method:'DELETE' }); }
+async function apiClearHistory() { await safeFetch(`${API}/api/history`, { method:'DELETE' }); }
+async function apiPause(pause) {
+  const r = await safeFetch(`${API}/api/pause`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({pause}) });
+  if (!r.ok) throw new Error('Pause failed');
+  return await r.json();
+}
+async function apiSaveSchedule(games) {
+  const r = await safeFetch(`${API}/api/schedule`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({games}) });
+  if (!r.ok) { const e = await r.json(); throw new Error(e.error); }
+  return await r.json();
+}
+async function apiDeleteSchedule() { await safeFetch(`${API}/api/schedule`, { method:'DELETE' }); }
+async function apiCalcOdds(legs) {
+  const r = await safeFetch(`${API}/api/calc-odds`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({legs}) });
+  if (!r.ok) throw new Error('Calc failed');
+  return await r.json();
+}
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+window.addEventListener('load', async () => {
+  document.getElementById('dateLabel').textContent =
+    new Date().toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' });
+  loadSession();
+  if (_session) {
+    try { await loadApp(false); }
+    catch (e) {
+      if (e.message === 'unauthorized') {
+        clearSession(); showScreen('auth');
+        showToast('⚠️ Session expired. Please sign in.');
+      } else {
+        showScreen('auth'); showToast('⚠️ Server unreachable.');
+      }
+    }
+  } else {
+    showScreen('auth');
+  }
 });
+
+async function loadApp(fromAuth = false) {
+  const { state, intel } = await apiGetState();
+  if (fromAuth) {
+    const btn = document.getElementById('authBtn');
+    btn.textContent = 'Unlock →'; btn.disabled = false;
+  }
+  S = state; INTEL = intel;
+  if (S) { showScreen('main'); renderAll(); }
+  else showScreen('setup');
+}
 
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
 
+function closeOverlay(id) { document.getElementById(id).classList.remove('show'); }
+
 async function initSystem() {
-  const raw = document.getElementById('bankrollInput').value;
-  const bankroll = parseInt(raw, 10);
+  const bankroll = parseInt(document.getElementById('bankrollInput').value, 10);
   if (!bankroll || bankroll < 2001) { showToast('⚠️ Enter a bankroll above ₦2,000.'); return; }
   if (_busy) return; _busy = true;
-  try { S = await apiInit(bankroll); showScreen('main'); renderAll(); showToast('✅ Tracking started!'); }
-  catch (e) { showToast(`⚠️ ${e.message}`); }
+  try {
+    S = await apiInit(bankroll);
+    INTEL = null;
+    showScreen('main'); renderAll();
+    showToast('✅ Tracking started!');
+  } catch (e) { showToast(`⚠️ ${e.message}`); }
   finally { _busy = false; }
 }
 
 function setAllButtons(disabled) {
-  ['btnWin','btnLoss','btnNoGame'].forEach(id => {
+  ['btnWin','btnLoss','btnNoGame','btnLockStake'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.disabled = disabled;
   });
 }
 
-// ═══════════════════════════════════════════
-//  RESULTS
-// ═══════════════════════════════════════════
-async function recordResult(outcome) {
-  if (!S || _busy) return;
-  _busy = true; setAllButtons(true);
+// ─────────────────────────────────────────────
+//  TICKET ENTRY
+// ─────────────────────────────────────────────
+function onTicketInput() {
+  clearTimeout(_previewDebounce);
+  _previewDebounce = setTimeout(updateTicketPreview, 200);
+}
+
+function updateTicketPreview() {
+  const raw  = document.getElementById('ticketOddsInput').value;
+  const odds = parseFloat(raw);
+  const prev = document.getElementById('ticketPreview');
+  const warn = document.getElementById('ticketWarn');
+  const btn  = document.getElementById('btnLockStake');
+
+  if (!odds || odds < 1.01 || odds > 50) {
+    prev.style.display = 'none';
+    warn.classList.remove('show');
+    btn.disabled = true;
+    return;
+  }
+
+  const avg      = INTEL ? INTEL.rollingAvg : 1.70;
+  const ratio    = odds / avg;
+  const round    = S ? S.round : 1;
+  const losses   = S ? (S.lossesAccumulated || 0) : 0;
+  const bk       = S ? S.bankroll : 0;
+  const profitTgt = S ? (S.profitTarget || 0) : 0;
+
+  // Determine mode client-side for preview
+  let mode, label;
+  if (round === 1) {
+    if (ratio >= 1.5)        { mode='profit';   label='PROFIT+'; }
+    else if (ratio >= 1.2)   { mode='profit';   label='PROFIT+'; }
+    else if (ratio >= 0.85)  { mode='profit';   label='PROFIT'; }
+    else if (ratio >= 0.65)  { mode='profit';   label='CAUTIOUS'; }
+    else                     { mode='profit';   label='CAUTIOUS'; }
+  } else {
+    if (ratio >= 0.85)       { mode='profit';   label='PROFIT'; }
+    else if (ratio >= 0.65)  { mode='recovery'; label='RECOVERY'; }
+    else                     { mode='survival'; label='SURVIVAL'; }
+  }
+
+  // Compute pct for R1
+  let pct = 0.05;
+  if (round === 1) {
+    if (ratio >= 1.5) pct = 0.08;
+    else if (ratio >= 1.2) pct = 0.065;
+    else if (ratio >= 0.85) pct = 0.05;
+    else if (ratio >= 0.65) pct = 0.035;
+    else pct = 0.025;
+  }
+
+  const pf = Math.max(odds - 1, 0.05);
+  let stake, target;
+  if (round === 1) {
+    target = Math.round(bk * pct);
+    stake  = Math.round(target / pf);
+  } else {
+    target = profitTgt;
+    if (mode === 'profit')        stake = Math.round((losses + target) / pf);
+    else if (mode === 'recovery') stake = losses > 0 ? Math.round(losses / pf) : 0;
+    else                          stake = losses > 0 ? Math.round((losses * 0.80) / pf) : 0;
+  }
+
+  // Viability
+  const threshold = Math.min(Math.max(0.20 + odds * 0.05, 0.25), 0.45);
+  const viable    = bk > 2000 && stake <= bk * threshold;
+
+  // Render badge
+  const badgeClass = label === 'PROFIT+' ? 'profit-plus' : label === 'PROFIT' ? 'profit' : label === 'CAUTIOUS' ? 'cautious' : label === 'RECOVERY' ? 'recovery' : 'survival';
+  document.getElementById('tpMode').innerHTML = `<span class="mode-badge ${badgeClass}">${label}</span>`;
+  document.getElementById('tpRatio').textContent = `${ratio.toFixed(2)}× avg`;
+  if (round === 1) {
+    document.getElementById('tpTargetRow').style.display = 'flex';
+    document.getElementById('tpTarget').textContent = `₦${target.toLocaleString()} (${Math.round(pct*100)}% BK)`;
+  } else {
+    document.getElementById('tpTargetRow').style.display = mode === 'profit' ? 'flex' : 'none';
+    document.getElementById('tpTarget').textContent = `₦${target.toLocaleString()}`;
+  }
+  document.getElementById('tpStake').textContent = `₦${stake.toLocaleString()}`;
+  prev.style.display = 'block';
+
+  if (!viable && bk > 2000) {
+    warn.textContent = `⚠️ Stake (₦${stake.toLocaleString()}) exceeds ${Math.round(threshold*100)}% of bankroll. Consider waiting for better odds.`;
+    warn.classList.add('show');
+    btn.disabled = true;
+  } else {
+    warn.classList.remove('show');
+    btn.disabled = false;
+  }
+}
+
+async function lockStake() {
+  const raw  = document.getElementById('ticketOddsInput').value;
+  const odds = parseFloat(raw);
+  if (!odds || odds < 1.01) { showToast('⚠️ Enter valid odds first.'); return; }
+  if (_busy) return; _busy = true;
+  setAllButtons(true);
   try {
-    const r = await apiResult(outcome);
-    S = r.state;
-    const event = r.event;
-    renderAll();
-    if (event.kind === 'win') {
-      document.getElementById('winModalTitle').textContent = event.round===1 ? '✅ Clean Win!' : `✅ Recovered on Round ${event.round}!`;
-      document.getElementById('winModalMsg').innerHTML = `Cycle <strong>${event.cycleNumber}</strong> complete.<br>Profit: <strong style="color:var(--success)">+₦${event.profit.toLocaleString()}</strong><br>New bankroll: <strong style="color:var(--amber)">₦${event.bankroll.toLocaleString()}</strong>`;
-      document.getElementById('winOverlay').classList.add('show');
-    } else if (event.kind === 'bust') {
-      document.getElementById('bustDetails').innerHTML = `<div class="row"><span>Total lost</span><span>₦${event.lostTotal.toLocaleString()}</span></div><div class="row"><span>Remaining bankroll</span><span>₦${event.bankroll.toLocaleString()}</span></div><div class="row"><span>New profit target (5%)</span><span>₦${event.newProfitTarget.toLocaleString()}</span></div><div class="row"><span>New Round 1 stake</span><span>₦${event.newStake.toLocaleString()}</span></div>`;
+    const res = await apiTicket(odds);
+    S = res.state;
+    // Check if gate bust happened immediately
+    if (res.event && res.event.kind === 'bust') {
+      const e = res.event;
+      document.getElementById('bustTitle').textContent = '🚫 Stake Too Large — Gate Bust';
+      document.getElementById('bustDesc').textContent = `The required stake exceeded ${e.threshold}% of your bankroll. Cycle auto-reset for safety.`;
+      document.getElementById('bustDetails').innerHTML =
+        `<div class="row"><span>Losses accepted</span><span>₦${e.lostTotal.toLocaleString()}</span></div>
+         <div class="row"><span>Remaining bankroll</span><span>₦${e.bankroll.toLocaleString()}</span></div>`;
+      renderAll();
       document.getElementById('bustOverlay').classList.add('show');
     } else {
-      showToast(`Round ${event.round} — Stake ₦${event.newStake.toLocaleString()}`);
+      renderAll();
+      showToast(`✅ Stake locked — ₦${S.currentStake.toLocaleString()}`);
     }
   } catch (e) {
-    if (e.message === 'pending_result') showToast("⚠️ Enter yesterday's result first.");
-    else showToast(`⚠️ ${e.message}`);
+    if (e.message === 'Stake already locked. Log result first.') showToast('⚠️ Stake already locked. Log a result first.');
+    else if (e.message === 'pending_result') showToast('⚠️ Enter a previous result first.');
+    else if (e.message !== 'unauthorized') showToast(`⚠️ ${e.message}`);
+  } finally { _busy = false; setAllButtons(false); }
+}
+
+// ─────────────────────────────────────────────
+//  RESULTS
+// ─────────────────────────────────────────────
+async function recordResult(outcome) {
+  if (!S || _busy) return;
+  if (!S.stakeLocked) { showToast('⚠️ Enter today\'s ticket odds first.'); return; }
+  _busy = true; setAllButtons(true);
+  try {
+    const res = await apiResult(outcome);
+    S = res.state;
+    const event = res.event;
+    renderAll();
+
+    if (event.kind === 'win') {
+      const isRec = event.winType === 'recovery';
+      document.getElementById('winModalTitle').textContent = isRec
+        ? '🟢 Recovery Complete!' : (event.round === 1 ? '✅ Clean Win!' : `✅ Recovered on Round ${event.round}!`);
+      document.getElementById('winModalMsg').innerHTML = isRec
+        ? `Cycle <strong>${event.cycleNumber}</strong> — losses recovered.<br>Bankroll restored: <strong style="color:var(--recovery)">₦${event.recovered.toLocaleString()}</strong> returned.<br>No profit this cycle — clean slate.<br>New bankroll: <strong style="color:var(--amber)">₦${event.bankroll.toLocaleString()}</strong>`
+        : `Cycle <strong>${event.cycleNumber}</strong> complete.<br>Profit booked: <strong style="color:var(--success)">+₦${event.profit.toLocaleString()}</strong><br>New bankroll: <strong style="color:var(--amber)">₦${event.bankroll.toLocaleString()}</strong>`;
+      document.getElementById('winOverlay').classList.add('show');
+
+    } else if (event.kind === 'bust') {
+      const isGate = event.bustType === 'gate';
+      document.getElementById('bustTitle').textContent = isGate ? '🚫 Gate Bust' : '💥 Bust — Cycle Failed';
+      document.getElementById('bustDesc').textContent = isGate
+        ? `The next round's stake exceeded ${event.gateThreshold}% of bankroll. Auto-reset triggered.`
+        : 'All 3 rounds lost. System rescales to your new bankroll.';
+      document.getElementById('bustDetails').innerHTML =
+        `<div class="row"><span>Total lost</span><span>₦${event.lostTotal.toLocaleString()}</span></div>
+         <div class="row"><span>Remaining bankroll</span><span>₦${event.bankroll.toLocaleString()}</span></div>`;
+      document.getElementById('bustOverlay').classList.add('show');
+
+    } else {
+      // Loss, advancing round
+      showToast(`Round ${event.round} — Enter next ticket when ready`);
+    }
+  } catch (e) {
+    if (e.message === 'pending_result') showToast('⚠️ Enter a previous result first.');
+    else if (e.message === "Enter today's ticket odds first.") showToast('⚠️ Enter your ticket odds first.');
+    else if (e.message !== 'unauthorized') showToast(`⚠️ ${e.message}`);
   } finally { _busy = false; setAllButtons(false); }
 }
 
 async function recordNoGameToday() {
   if (!S || _busy) return;
   _busy = true; setAllButtons(true);
-  try { S = await apiNoGame(); renderAll(); showToast('🚫 No game logged for today.'); }
-  catch (e) {
-    if (e.message === 'pending_result') showToast("⚠️ Enter yesterday's result first.");
-    else showToast(`⚠️ ${e.message}`);
+  try {
+    S = await apiNoGame();
+    renderAll();
+    showToast('🚫 No game logged for today.');
+  } catch (e) {
+    if (e.message === 'pending_result') showToast('⚠️ Enter a previous result first.');
+    else if (e.message !== 'unauthorized') showToast(`⚠️ ${e.message}`);
   } finally { _busy = false; setAllButtons(false); }
 }
 
-// ═══════════════════════════════════════════
-//  PAUSE TOGGLE
-// ═══════════════════════════════════════════
+// ─────────────────────────────────────────────
+//  PAUSE
+// ─────────────────────────────────────────────
 async function togglePause() {
   if (!S || _busy) return;
   _busy = true;
   try {
-    const newPause = !S.pauseMode;
-    await apiPause(newPause);
-    S.pauseMode = newPause;
-    if (newPause) S.pauseStartDate = new Date().toISOString().slice(0,10);
-    else S.pauseStartDate = null;
+    const res = await apiPause(!S.pauseMode);
+    S.pauseMode = res.pauseMode;
     renderPauseBtn();
-    showToast(newPause ? '⏸ Notifications paused.' : '▶ Notifications resumed.');
-  } catch (e) { showToast(`⚠️ ${e.message}`); }
+    showToast(S.pauseMode ? '⏸ Notifications paused.' : '▶ Notifications resumed.');
+  } catch (e) { if (e.message !== 'unauthorized') showToast(`⚠️ ${e.message}`); }
   finally { _busy = false; }
 }
 
@@ -617,36 +1135,30 @@ function renderPauseBtn() {
   else             { btn.textContent = '⏸ Pause';  btn.classList.remove('paused'); }
 }
 
-// ═══════════════════════════════════════════
-//  GAME SCHEDULER
-// ═══════════════════════════════════════════
+// ─────────────────────────────────────────────
+//  SCHEDULER
+// ─────────────────────────────────────────────
 function openScheduler() {
   document.getElementById('schForm').style.display = 'block';
   document.getElementById('btnSetGames').style.display = 'none';
-  buildLegsPills();
-  buildGameFields(_currentLegs);
+  buildLegsPills(); buildGameFields(_currentLegs);
 }
-
 function closeScheduler() {
   document.getElementById('schForm').style.display = 'none';
   document.getElementById('btnSetGames').style.display = 'inline-block';
 }
-
 function buildLegsPills() {
-  const container = document.getElementById('legsPills');
-  container.innerHTML = '';
+  const c = document.getElementById('legsPills'); c.innerHTML = '';
   [1,2,3,4,5].forEach(n => {
     const p = document.createElement('button');
     p.className = 'pill' + (n === _currentLegs ? ' active' : '');
     p.textContent = n;
     p.onclick = () => { _currentLegs = n; buildLegsPills(); buildGameFields(n); };
-    container.appendChild(p);
+    c.appendChild(p);
   });
 }
-
 function buildGameFields(n) {
-  const container = document.getElementById('gameFields');
-  container.innerHTML = '';
+  const c = document.getElementById('gameFields'); c.innerHTML = '';
   for (let i = 0; i < n; i++) {
     const div = document.createElement('div');
     div.className = 'game-field';
@@ -657,7 +1169,7 @@ function buildGameFields(n) {
         <input class="field-input" type="text" id="time_${i}" placeholder="e.g. 3:30" maxlength="8">
         <button class="time-scroll-btn" onclick="openTimePicker(${i})" type="button">🕐</button>
       </div>`;
-    container.appendChild(div);
+    c.appendChild(div);
   }
   document.getElementById('oddsResult').style.display = 'none';
 }
@@ -683,29 +1195,33 @@ async function liveCalcOdds() {
 async function saveSchedule() {
   const games = [];
   for (let i = 0; i < _currentLegs; i++) {
-    const odds = parseFloat(document.getElementById(`odds_${i}`)?.value);
+    const odds   = parseFloat(document.getElementById(`odds_${i}`)?.value);
     const timeRaw = (document.getElementById(`time_${i}`)?.value || '').trim();
     if (!odds || odds <= 1) { showToast(`⚠️ Enter odds for game ${i+1}.`); return; }
-    if (!timeRaw) { showToast(`⚠️ Enter time for game ${i+1}.`); return; }
+    if (!timeRaw)           { showToast(`⚠️ Enter time for game ${i+1}.`); return; }
     const t24 = parseTimeTo24h(timeRaw);
-    if (!t24) { showToast(`⚠️ Invalid time for game ${i+1}. Use e.g. 3:30 or 3:30 PM`); return; }
+    if (!t24) { showToast(`⚠️ Invalid time for game ${i+1}. Use e.g. 3:30 PM`); return; }
     games.push({ odds, startTime: t24 });
   }
   if (_busy) return; _busy = true;
   try {
-    const r = await apiSaveSchedule(games);
-    S.todaySchedule = r.schedule;
-    closeScheduler();
-    renderSchedule();
+    const res = await apiSaveSchedule(games);
+    S.todaySchedule = res.schedule;
+    closeScheduler(); renderSchedule();
     showToast('✅ Schedule saved!');
-  } catch (e) { showToast(`⚠️ ${e.message}`); }
+    // If stake not locked yet, auto-fill ticket with effective odds
+    if (!S.stakeLocked && res.schedule.oddsResult) {
+      document.getElementById('ticketOddsInput').value = res.schedule.oddsResult.rounded;
+      updateTicketPreview();
+    }
+  } catch (e) { if (e.message !== 'unauthorized') showToast(`⚠️ ${e.message}`); }
   finally { _busy = false; }
 }
 
 async function clearSchedule() {
   if (_busy) return; _busy = true;
   try { await apiDeleteSchedule(); S.todaySchedule = null; renderSchedule(); showToast('Schedule cleared.'); }
-  catch (e) { showToast(`⚠️ ${e.message}`); }
+  catch (e) { if (e.message !== 'unauthorized') showToast(`⚠️ ${e.message}`); }
   finally { _busy = false; }
 }
 
@@ -713,48 +1229,52 @@ function renderSchedule() {
   const display = document.getElementById('schDisplay');
   const btnSet  = document.getElementById('btnSetGames');
   const sch     = S && S.todaySchedule;
+  if (!sch) { display.style.display = 'none'; btnSet.style.display = 'inline-block'; return; }
 
-  if (!sch) {
-    display.style.display = 'none';
-    btnSet.style.display  = 'inline-block';
-    return;
-  }
-
-  const or = sch.oddsResult;
-  const gamesHtml = sch.games.map((g, i) => `
+  const or  = sch.oddsResult;
+  const html = sch.games.map((g,i) => `
     <div class="sched-game-row">
       <span class="sched-game-label">Game ${i+1}</span>
       <span class="sched-game-val">Odds: ${g.odds} &nbsp;|&nbsp; ${formatTime12(g.startTime)} → ${formatTime12(g.endTime)}</span>
     </div>`).join('');
 
-  const badgeCls  = sch.resultEntered ? 'done'    : 'pending';
-  const badgeTxt  = sch.resultEntered ? '✅ Done' : '⏳ Pending';
+  const badge = sch.resultEntered
+    ? '<span class="sched-result-badge done">✅ Done</span>'
+    : '<span class="sched-result-badge pending">⏳ Pending</span>';
 
-  display.innerHTML = `
-    <div class="sched-display">
-      ${gamesHtml}
-      <div class="sched-odds-summary">
-        <div>
-          <div class="sched-odds-label">Effective Odds</div>
-          <div class="sched-odds-val">${or.rounded}</div>
-          <div style="font-size:11px;color:var(--text-faint);margin-top:2px">Raw ${or.raw} + ${or.bonusPct}% bonus</div>
-        </div>
-        <span class="sched-result-badge ${badgeCls}">${badgeTxt}</span>
-      </div>
-      <button class="btn-sch-action danger" style="width:100%;margin-top:10px" onclick="clearSchedule()">✕ Clear Schedule</button>
-    </div>`;
+  const useBtn = !S.stakeLocked && !sch.resultEntered
+    ? `<button class="btn-use-sched-odds" onclick="useScheduleOdds()">↑ Use these odds for ticket (${or.rounded})</button>` : '';
+
+  display.innerHTML = `<div class="sched-display">
+    ${html}
+    <div class="sched-odds-summary">
+      <div>
+        <div class="sched-odds-label">Effective Odds</div>
+        <div class="sched-odds-val">${or.rounded}</div>
+        <div style="font-size:11px;color:var(--text-faint);margin-top:2px">Raw ${or.raw} + ${or.bonusPct}% bonus</div>
+      </div>${badge}
+    </div>
+    ${useBtn}
+    <button class="btn-sch-action danger" style="width:100%;margin-top:10px" onclick="clearSchedule()">✕ Clear Schedule</button>
+  </div>`;
   display.style.display = 'block';
   btnSet.style.display  = 'none';
 }
 
-// ═══════════════════════════════════════════
-//  TIME PICKER
-// ═══════════════════════════════════════════
-function openTimePicker(gameIndex) {
-  _timePickerTarget = gameIndex;
-  document.getElementById('tpsTarget').textContent = `Game ${gameIndex + 1}`;
+function useScheduleOdds() {
+  if (!S || !S.todaySchedule) return;
+  const odds = S.todaySchedule.oddsResult.rounded;
+  document.getElementById('ticketOddsInput').value = odds;
+  updateTicketPreview();
+  document.getElementById('ticketCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
 
-  // Build hours
+// ─────────────────────────────────────────────
+//  TIME PICKER
+// ─────────────────────────────────────────────
+function openTimePicker(idx) {
+  _timePickerTarget = idx;
+  document.getElementById('tpsTarget').textContent = `Game ${idx+1}`;
   const hoursEl = document.getElementById('tpsHours');
   hoursEl.innerHTML = '<div style="height:78px"></div>';
   for (let h = 1; h <= 12; h++) {
@@ -763,8 +1283,6 @@ function openTimePicker(gameIndex) {
     hoursEl.appendChild(d);
   }
   hoursEl.innerHTML += '<div style="height:78px"></div>';
-
-  // Build minutes
   const minsEl = document.getElementById('tpsMins');
   minsEl.innerHTML = '<div style="height:78px"></div>';
   for (let m = 0; m < 60; m += 5) {
@@ -773,8 +1291,6 @@ function openTimePicker(gameIndex) {
     minsEl.appendChild(d);
   }
   minsEl.innerHTML += '<div style="height:78px"></div>';
-
-  // Build AM/PM
   const ampmEl = document.getElementById('tpsAmPm');
   ampmEl.innerHTML = '<div style="height:78px"></div>';
   ['AM','PM'].forEach(p => {
@@ -783,233 +1299,327 @@ function openTimePicker(gameIndex) {
     ampmEl.appendChild(d);
   });
   ampmEl.innerHTML += '<div style="height:78px"></div>';
-
-  // Default to 3:00 PM
-  const existingVal = document.getElementById(`time_${gameIndex}`)?.value;
-  let defH = 3, defM = 0, defP = 'PM';
-  if (existingVal) {
-    const t = parseTimeTo24h(existingVal);
-    if (t) {
-      const [h24, m] = t.split(':').map(Number);
-      defP = h24 >= 12 ? 'PM' : 'AM';
-      defH = h24 % 12 || 12;
-      defM = m;
-    }
-  }
-
-  setTimeout(() => {
-    scrollToVal(hoursEl, defH, 1);
-    scrollToVal(minsEl,  defM, 5);
-    scrollToVal(ampmEl,  defP, 1, true);
-  }, 50);
-
+  const ex = document.getElementById(`time_${idx}`)?.value;
+  let dH = 3, dM = 0, dP = 'PM';
+  if (ex) { const t = parseTimeTo24h(ex); if (t) { const [h,m] = t.split(':').map(Number); dP = h>=12?'PM':'AM'; dH = h%12||12; dM = m; } }
+  setTimeout(() => { scrollToVal(hoursEl,dH,1); scrollToVal(minsEl,dM,5); scrollToVal(ampmEl,dP,1,true); }, 50);
   document.getElementById('timePickerOverlay').classList.add('show');
 }
-
-function scrollToVal(container, val, step, isStr = false) {
-  const items = container.querySelectorAll('.tps-item');
-  items.forEach(item => {
-    const match = isStr ? item.dataset.val === val : parseInt(item.dataset.val) === val;
-    item.classList.toggle('selected', match);
-    if (match) item.scrollIntoView({ block:'center', behavior:'smooth' });
+function scrollToVal(container,val,step,isStr=false) {
+  container.querySelectorAll('.tps-item').forEach(item => {
+    const m = isStr ? item.dataset.val===val : parseInt(item.dataset.val)===val;
+    item.classList.toggle('selected',m);
+    if (m) item.scrollIntoView({block:'center',behavior:'smooth'});
   });
 }
-
-function closeTimePicker() {
-  document.getElementById('timePickerOverlay').classList.remove('show');
-}
-
+function closeTimePicker() { document.getElementById('timePickerOverlay').classList.remove('show'); }
 function confirmTimePicker() {
-  const hoursEl = document.getElementById('tpsHours');
-  const minsEl  = document.getElementById('tpsMins');
-  const ampmEl  = document.getElementById('tpsAmPm');
-
-  const selH = getScrollSelected(hoursEl) || '3';
-  const selM = getScrollSelected(minsEl)  || '0';
-  const selP = getScrollSelected(ampmEl)  || 'PM';
-
-  const h12 = parseInt(selH), m = parseInt(selM);
-  let h24 = h12 % 12;
-  if (selP === 'PM') h24 += 12;
-  const timeStr = `${String(h24).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
-
-  const input = document.getElementById(`time_${_timePickerTarget}`);
-  if (input) input.value = formatTime12(timeStr);
-
-  closeTimePicker();
-  liveCalcOdds();
+  const selH = getScrollSelected(document.getElementById('tpsHours')) || '3';
+  const selM = getScrollSelected(document.getElementById('tpsMins'))  || '0';
+  const selP = getScrollSelected(document.getElementById('tpsAmPm'))  || 'PM';
+  let h24 = parseInt(selH)%12; if (selP==='PM') h24+=12;
+  const inp = document.getElementById(`time_${_timePickerTarget}`);
+  if (inp) inp.value = formatTime12(`${String(h24).padStart(2,'0')}:${String(parseInt(selM)).padStart(2,'0')}`);
+  closeTimePicker(); liveCalcOdds();
 }
-
 function getScrollSelected(container) {
-  // Get the item closest to the center of the scroll container
   const items = container.querySelectorAll('.tps-item');
-  const midY  = container.scrollTop + container.clientHeight / 2;
-  let closest = null, closestDist = Infinity;
-  items.forEach(item => {
-    const dist = Math.abs((item.offsetTop + item.clientHeight / 2) - midY);
-    if (dist < closestDist) { closestDist = dist; closest = item; }
-  });
+  const midY  = container.scrollTop + container.clientHeight/2;
+  let closest = null, dist = Infinity;
+  items.forEach(item => { const d = Math.abs((item.offsetTop+item.clientHeight/2)-midY); if (d<dist){dist=d;closest=item;} });
   return closest ? closest.dataset.val : null;
 }
-
-// ═══════════════════════════════════════════
-//  TIME HELPERS
-// ═══════════════════════════════════════════
 function parseTimeTo24h(str) {
   str = str.trim();
-  // Match formats: "3:30 PM", "15:30", "3:30", "330pm"
-  let match;
-  // HH:MM AM/PM
-  if ((match = str.match(/^(\d{1,2}):(\d{2})\s*(am|pm)?$/i))) {
-    let h = parseInt(match[1]), m = parseInt(match[2]);
-    const period = match[3] ? match[3].toLowerCase() : null;
-    if (m < 0 || m > 59) return null;
-    if (period) {
-      if (h < 1 || h > 12) return null;
-      if (period === 'pm' && h !== 12) h += 12;
-      if (period === 'am' && h === 12) h = 0;
-    } else {
-      // No AM/PM — default to PM if hour <= 12
-      if (h < 12) h += 12;
-    }
-    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
-  }
-  return null;
+  const m = str.match(/^(\d{1,2}):(\d{2})\s*(am|pm)?$/i);
+  if (!m) return null;
+  let h = parseInt(m[1]), mn = parseInt(m[2]);
+  const period = m[3] ? m[3].toLowerCase() : null;
+  if (mn<0||mn>59) return null;
+  if (period) { if (h<1||h>12) return null; if (period==='pm'&&h!==12) h+=12; if (period==='am'&&h===12) h=0; }
+  else { if (h<12) h+=12; }
+  return `${String(h).padStart(2,'0')}:${String(mn).padStart(2,'0')}`;
+}
+function formatTime12(t24) {
+  const [h,m] = t24.split(':').map(Number);
+  const p = h>=12?'PM':'AM'; const h12 = h%12||12;
+  return `${h12}:${String(m).padStart(2,'0')} ${p}`;
 }
 
-function formatTime12(time24) {
-  const [h, m] = time24.split(':').map(Number);
-  const period = h >= 12 ? 'PM' : 'AM';
-  const h12    = h % 12 || 12;
-  return `${h12}:${String(m).padStart(2,'0')} ${period}`;
-}
-
-// ═══════════════════════════════════════════
+// ─────────────────────────────────────────────
 //  RENDER
-// ═══════════════════════════════════════════
+// ─────────────────────────────────────────────
+function todayStr() { return new Date(Date.now()+3600000).toISOString().slice(0,10); }
+
 function renderAll() {
   if (!S) return;
-
-  // Pause button
   renderPauseBtn();
 
-  // Banners
-  const hasPending = S.todaySchedule && !S.todaySchedule.resultEntered &&
-    S.todaySchedule.date !== new Date().toISOString().slice(0,10);
-  document.getElementById('pendingBanner').classList.toggle('show', !!hasPending);
+  // Pending banner
+  const today      = todayStr();
+  const hasPending = S.todaySchedule && !S.todaySchedule.resultEntered && S.todaySchedule.date < today;
+  const pb = document.getElementById('pendingBanner');
+  if (hasPending) {
+    const days = Math.round((new Date(today)-new Date(S.todaySchedule.date))/86400000);
+    document.getElementById('pendingText').textContent =
+      `Games from ${days===1?'yesterday':`${days} days ago`} were never logged. Enter the result first.`;
+    pb.classList.add('show');
+  } else { pb.classList.remove('show'); }
 
   // Bankroll
   document.getElementById('bkAmount').textContent = S.bankroll.toLocaleString();
+  document.getElementById('bkBadge').textContent  = `Cycle #${S.cycleNumber}`;
   const diff = S.bankroll - S.initialBankroll;
-  const deltaEl = document.getElementById('bkDelta');
-  if (diff === 0)       { deltaEl.textContent = 'Starting balance';         deltaEl.className = 'bk-delta'; }
-  else if (diff > 0)    { deltaEl.textContent = `+₦${diff.toLocaleString()} from start (${((diff/S.initialBankroll)*100).toFixed(1)}%)`; deltaEl.className = 'bk-delta pos'; }
-  else                  { deltaEl.textContent = `−₦${Math.abs(diff).toLocaleString()} from start`; deltaEl.className = 'bk-delta neg'; }
+  const de = document.getElementById('bkDelta');
+  if (diff===0)      { de.textContent='Starting balance'; de.className='bk-delta'; }
+  else if (diff>0)   { de.textContent=`+₦${diff.toLocaleString()} from start (${((diff/S.initialBankroll)*100).toFixed(1)}%)`; de.className='bk-delta pos'; }
+  else               { de.textContent=`−₦${Math.abs(diff).toLocaleString()} from start`; de.className='bk-delta neg'; }
 
-  // Round
-  for (let i=1; i<=3; i++) {
+  // Round dots (always 3)
+  for (let i=1;i<=3;i++) {
     const dot = document.getElementById(`dot${i}`);
-    dot.className = 'rdot';
+    dot.className='rdot';
     if (i < S.round)  dot.classList.add('lost');
     if (i === S.round) dot.classList.add('active');
   }
-  const roundTexts = ['Round 1 — Fresh Cycle','Round 2 — Recovery Needed','Round 3 — Final Recovery'];
-  document.getElementById('roundText').textContent = roundTexts[S.round - 1];
+  const rtexts = ['Round 1 — Fresh Cycle','Round 2 — Recovery Needed','Round 3 — Final Chance'];
+  document.getElementById('roundText').textContent = rtexts[(S.round||1)-1];
 
-  // Stake
-  document.getElementById('stakeAmt').textContent = S.currentStake.toLocaleString();
-  let sub = '';
-  if (S.round === 1)      sub = `Win target: <span>+₦${S.profitTarget.toLocaleString()}</span> &nbsp;|&nbsp; Odds: <span>1.70</span>`;
-  else if (S.round === 2) sub = `Recovering ₦${S.lossesAccumulated.toLocaleString()} + profit. Win = <span>+₦${S.profitTarget.toLocaleString()} net</span>`;
-  else                    sub = `<span style="color:var(--danger)">Final chance</span>. Win = <span>+₦${S.profitTarget.toLocaleString()} net</span>. Loss = bust.`;
-  document.getElementById('stakeSub').innerHTML = sub;
+  // Recovery/survival banner for R2+
+  const rb = document.getElementById('recoveryBanner');
+  if (S.round > 1 && S.phase && (S.phase==='recovery'||S.phase==='survival')) {
+    document.getElementById('recoveryText').textContent =
+      S.phase==='survival'
+        ? `🛡️ SURVIVAL MODE — Odds are critically low. Partial recovery only. ₦${(S.lossesAccumulated||0).toLocaleString()} at stake.`
+        : `🟡 RECOVERY MODE — Today's odds are below baseline. No profit target this round — recovering ₦${(S.lossesAccumulated||0).toLocaleString()}.`;
+    rb.classList.add('show');
+  } else { rb.classList.remove('show'); }
 
-  // Warning
-  const warnBanner = document.getElementById('warnBanner');
-  if (S.bankroll <= 2000) {
-    document.getElementById('warnText').textContent = 'HARD STOP — Bankroll below ₦2,000. Do not bet. Reload bankroll before continuing.';
-    warnBanner.classList.add('show');
-  } else if (S.bankroll < S.initialBankroll * 0.4) {
-    document.getElementById('warnText').textContent = `Bankroll down to ${((S.bankroll/S.initialBankroll)*100).toFixed(0)}% of start. System scaling down — stay disciplined.`;
-    warnBanner.classList.add('show');
+  // Show ticket card or stake card
+  const tc = document.getElementById('ticketCard');
+  const sc = document.getElementById('stakeCard');
+
+  if (S.stakeLocked && S.currentStake > 0) {
+    // Stake locked — show stake card
+    tc.style.display = 'none';
+    sc.style.display = 'block';
+    sc.className = 'stake-card pulse';
+    const mode = S.phase || 'profit';
+    if (mode==='recovery') sc.classList.add('mode-recovery');
+    else if (mode==='survival') sc.classList.add('mode-survival');
+
+    document.getElementById('stakeAmt').textContent = S.currentStake.toLocaleString();
+
+    // Mode badge
+    const badgeMap = { 'profit':'profit','recovery':'recovery','survival':'survival' };
+    const labelMap = S.cycleLabel || (mode==='profit'?'PROFIT':mode.toUpperCase());
+    const bClass   = mode==='recovery'?'recovery':mode==='survival'?'survival':labelMap==='PROFIT+'?'profit-plus':labelMap==='CAUTIOUS'?'cautious':'profit';
+    document.getElementById('stakeModeBadge').innerHTML = `<span class="mode-badge ${bClass}">${labelMap}</span>`;
+
+    // Stake sub-text
+    let sub='';
+    const roundOdds = S.roundOdds && S.roundOdds.length ? S.roundOdds[S.roundOdds.length-1] : null;
+    if (S.round===1) {
+      sub = `Win target: <span>+₦${(S.profitTarget||0).toLocaleString()}</span>`;
+    } else if (mode==='profit') {
+      sub = `Recovering ₦${(S.lossesAccumulated||0).toLocaleString()} + profit. Win = <span>+₦${(S.profitTarget||0).toLocaleString()} net</span>`;
+    } else if (mode==='recovery') {
+      sub = `<span class="warn-span">Recovery only.</span> Win returns ₦${(S.lossesAccumulated||0).toLocaleString()} to bankroll.`;
+    } else {
+      sub = `<span class="warn-span">Survival — partial recovery.</span> No profit target.`;
+    }
+    document.getElementById('stakeSub').innerHTML = sub;
+    if (S.round===3) {
+      document.getElementById('stakeSub').innerHTML += ' &nbsp;<span class="warn-span">Final chance.</span>';
+    }
+    document.getElementById('stakeOddsTag').textContent = roundOdds ? `Odds: ${roundOdds} · Baseline: ${INTEL?INTEL.rollingAvg:'—'}` : '';
+
+    // Buttons enabled
+    document.getElementById('btnWin').disabled  = false;
+    document.getElementById('btnLoss').disabled = false;
+
   } else {
-    warnBanner.classList.remove('show');
+    // Stake not locked — show ticket entry
+    sc.style.display = 'none';
+    tc.style.display = 'block';
+
+    const isR1 = S.round === 1;
+    document.getElementById('ticketTitle').textContent = isR1
+      ? "Enter Today's Ticket Odds"
+      : `Enter Round ${S.round} Ticket Odds`;
+    document.getElementById('ticketAvgDisplay').textContent = INTEL ? INTEL.rollingAvg : '1.70';
+
+    if (INTEL) document.getElementById('ticketHint').textContent =
+      `Rolling avg: ${INTEL.rollingAvg} · ${S.round>1?`Losses to recover: ₦${(S.lossesAccumulated||0).toLocaleString()}`:'Fresh cycle — target is dynamic'}`;
+
+    // Win/Loss disabled until stake locked
+    document.getElementById('btnWin').disabled  = true;
+    document.getElementById('btnLoss').disabled = true;
   }
 
-  // Stats
+  // Warn banner
+  const wb = document.getElementById('warnBanner');
+  if (S.bankroll <= 2000) {
+    document.getElementById('warnText').textContent = 'HARD STOP — Bankroll ≤ ₦2,000. Do not bet. Reload before continuing.';
+    wb.classList.add('show');
+  } else if (S.bankroll < S.initialBankroll * 0.4) {
+    document.getElementById('warnText').textContent = `Bankroll at ${((S.bankroll/S.initialBankroll)*100).toFixed(0)}% of start. Stay disciplined.`;
+    wb.classList.add('show');
+  } else { wb.classList.remove('show'); }
+
+  // Stats strip
   document.getElementById('statCycles').textContent = S.totalCycles;
   document.getElementById('statWins').textContent   = S.successfulCycles;
   document.getElementById('statBusts').textContent  = S.busts;
-  document.getElementById('statStreak').textContent = S.streak || 0;
+  document.getElementById('statStreak').textContent = S.streak||0;
 
-  // Schedule
+  // Intelligence panel
+  if (INTEL) renderIntelPanel();
+
   renderSchedule();
-
-  // History
   renderHistory();
+}
+
+function renderIntelPanel() {
+  if (!INTEL) return;
+  document.getElementById('intelAvg').textContent = INTEL.rollingAvg || '—';
+  const trendMap = { up:'📈 Rising', down:'📉 Falling', stable:'➡️ Stable', insufficient:'⏳ Not enough data yet' };
+  const tEl = document.getElementById('intelTrend');
+  tEl.textContent = trendMap[INTEL.trend] || '—';
+  tEl.className   = 'intel-item-sub trend-' + (INTEL.trend==='up'?'up':INTEL.trend==='down'?'down':'stable');
+
+  const score = INTEL.agentScore;
+  document.getElementById('intelScore').innerHTML = score !== null
+    ? `${score}<div class="score-bar"><div class="score-fill" style="width:${score}%"></div></div>`
+    : '—';
+
+  const proj = INTEL.projection;
+  if (proj) {
+    document.getElementById('projWeekly').textContent  = proj.weekly>=0?`+₦${proj.weekly.toLocaleString()}`:`−₦${Math.abs(proj.weekly).toLocaleString()}`;
+    document.getElementById('projWeekly').className    = 'pval ' + (proj.weekly>=0?'pos':'neg');
+    document.getElementById('projMonthly').textContent = proj.monthly>=0?`+₦${proj.monthly.toLocaleString()}`:`−₦${Math.abs(proj.monthly).toLocaleString()}`;
+    document.getElementById('projMonthly').className   = 'pval ' + (proj.monthly>=0?'pos':'neg');
+  } else {
+    document.getElementById('projWeekly').textContent  = 'Need 5+ cycles';
+    document.getElementById('projMonthly').textContent = 'Need 5+ cycles';
+  }
+  document.getElementById('projRecBK').textContent = INTEL.recommendedBankroll ? `₦${INTEL.recommendedBankroll.toLocaleString()}` : '—';
 }
 
 function renderHistory() {
   const list = document.getElementById('histList');
-  if (!S.history.length) { list.innerHTML = '<div class="hist-empty">No bets recorded yet.<br>Your history will appear here.</div>'; return; }
+  if (!S.history || !S.history.length) {
+    list.innerHTML = '<div class="hist-empty">No bets recorded yet.<br>Your history will appear here.</div>'; return;
+  }
   list.innerHTML = S.history.slice(0,40).map(h => {
-    const isBust   = h.type === 'loss' && h.round === 3;
-    const isNoGame = h.type === 'no_game';
-    const cls      = isNoGame ? 'nogame-item' : h.type === 'win' ? 'win-item' : (isBust ? 'bust-item' : 'loss-item');
-    const amtCls   = isNoGame ? '' : h.type === 'win' ? 'pos' : 'neg';
-    const amtVal   = isNoGame ? '—' : h.type === 'win' ? `+₦${h.profitTarget.toLocaleString()}` : `−₦${h.stake.toLocaleString()}`;
-    const label    = isNoGame ? '🚫 NO GAME' : isBust ? '💥 BUST' : (h.type === 'win' ? '✅ WIN' : `❌ LOSS R${h.round}`);
+    const isNoGame   = h.type==='no_game';
+    const isRecovery = h.type==='win' && h.isRecovery;
+    const isBust     = h.type==='loss' && h.round===3;
+    const cls = isNoGame?'nogame-item':isRecovery?'recovery-item':h.type==='win'?'win-item':isBust?'bust-item':'loss-item';
+    const amtCls = isNoGame?'':isRecovery?'rec':h.type==='win'?'pos':'neg';
+    let amtVal;
+    if (isNoGame) amtVal='—';
+    else if (isRecovery) amtVal=`~₦${(h.recovered||0).toLocaleString()}`;
+    else if (h.type==='win') amtVal=`+₦${(h.profitTarget||0).toLocaleString()}`;
+    else amtVal=`−₦${(h.stake||0).toLocaleString()}`;
+    const label = isNoGame?'🚫 NO GAME':isRecovery?'🟢 RECOVERY WIN':h.type==='bust'?'💥 BUST':h.type==='win'?'✅ WIN':`❌ LOSS R${h.round}`;
+    const oddsTag = h.odds ? `@ ${h.odds}` : '';
     return `<div class="hist-item ${cls}">
       <div class="hist-left">
         <div class="hist-cycle">${h.date} · Cycle ${h.cycle}</div>
-        <div class="hist-desc">${label} — ${isNoGame ? 'Rest day' : `Staked ₦${h.stake.toLocaleString()}`}</div>
+        <div class="hist-desc">${label}${isNoGame?'':` — ₦${(h.stake||0).toLocaleString()}`}</div>
+        <div class="hist-odds">${h.label?`[${h.label}]`:''} ${oddsTag}</div>
       </div>
       <div class="hist-right">
         <div class="hist-amount ${amtCls}">${amtVal}</div>
-        <div class="hist-bk">BK: ₦${h.bankrollAfter.toLocaleString()}</div>
+        <div class="hist-bk">₦${(h.bankrollAfter||0).toLocaleString()}</div>
       </div>
     </div>`;
   }).join('');
 }
 
-// ═══════════════════════════════════════════
+// ─────────────────────────────────────────────
 //  MODALS
-// ═══════════════════════════════════════════
-function closeBust() { document.getElementById('bustOverlay').classList.remove('show'); showToast(`Cycle reset. New stake: ₦${S.currentStake.toLocaleString()}`); }
-function closeWin()  { document.getElementById('winOverlay').classList.remove('show'); }
+// ─────────────────────────────────────────────
+function closeBust() {
+  closeOverlay('bustOverlay');
+  showToast(S.bankroll<=2000 ? '⛔ Hard stop. Reload bankroll.' : `Cycle reset.`);
+}
+function closeWin() { closeOverlay('winOverlay'); }
 
 function showStats() {
   if (!S) return;
-  const wr  = S.totalCycles > 0 ? ((S.successfulCycles/S.totalCycles)*100).toFixed(1) : '—';
-  const net = S.bankroll - S.initialBankroll;
-  const ns  = net >= 0 ? '+' : '';
-  document.getElementById('statsContent').innerHTML = `
-    <div style="display:grid;gap:4px">
-      <div style="display:flex;justify-content:space-between"><span>Initial bankroll</span><span style="color:var(--text)">₦${S.initialBankroll.toLocaleString()}</span></div>
-      <div style="display:flex;justify-content:space-between"><span>Current bankroll</span><span style="color:var(--amber)">₦${S.bankroll.toLocaleString()}</span></div>
-      <div style="display:flex;justify-content:space-between"><span>Net P&L</span><span style="color:${net>=0?'var(--success)':'var(--danger)'}">${ns}₦${Math.abs(net).toLocaleString()}</span></div>
-      <div style="display:flex;justify-content:space-between"><span>Return</span><span>${ns}${((net/S.initialBankroll)*100).toFixed(2)}%</span></div>
-      <div style="border-top:1px solid var(--border);margin:6px 0"></div>
-      <div style="display:flex;justify-content:space-between"><span>Streak</span><span style="color:var(--amber)">${S.streak||0} days 🔥</span></div>
-      <div style="display:flex;justify-content:space-between"><span>Total cycles</span><span>${S.totalCycles}</span></div>
-      <div style="display:flex;justify-content:space-between"><span>Successful</span><span style="color:var(--success)">${S.successfulCycles}</span></div>
-      <div style="display:flex;justify-content:space-between"><span>Win rate</span><span>${wr}%</span></div>
-      <div style="display:flex;justify-content:space-between"><span>Busts</span><span style="color:var(--danger)">${S.busts}</span></div>
-      <div style="border-top:1px solid var(--border);margin:6px 0"></div>
-      <div style="display:flex;justify-content:space-between"><span>Current round</span><span>Round ${S.round}</span></div>
-      <div style="display:flex;justify-content:space-between"><span>Profit target</span><span style="color:var(--amber)">₦${S.profitTarget.toLocaleString()}</span></div>
-      <div style="display:flex;justify-content:space-between"><span>Current stake</span><span style="color:var(--amber)">₦${S.currentStake.toLocaleString()}</span></div>
-      <div style="display:flex;justify-content:space-between"><span>Notifications</span><span>${S.pauseMode ? '⏸ Paused' : '▶ Active'}</span></div>
-    </div>`;
+  const wr  = S.totalCycles>0?((S.successfulCycles/S.totalCycles)*100).toFixed(1):'—';
+  const net = S.bankroll-S.initialBankroll;
+  const ns  = net>=0?'+':'';
+  const ret = `${ns}${((net/S.initialBankroll)*100).toFixed(2)}%`;
+  const proj = INTEL && INTEL.projection;
+
+  function row(label,val,cls='') {
+    return `<div class="modal-stat-row"><span>${label}</span><span class="msval ${cls}">${val}</span></div>`;
+  }
+  document.getElementById('statsContent').innerHTML =
+    row('Initial bankroll',`₦${S.initialBankroll.toLocaleString()}`) +
+    row('Current bankroll',`₦${S.bankroll.toLocaleString()}`,'amb') +
+    row('Net P&L',`${ns}₦${Math.abs(net).toLocaleString()}`,net>=0?'pos':'neg') +
+    row('Return',ret,net>=0?'pos':'neg') +
+    '<hr class="modal-divider">' +
+    row('Streak',`${S.streak||0} days 🔥`) +
+    row('Total cycles',S.totalCycles) +
+    row('Wins',S.successfulCycles,'pos') +
+    row('Recovery wins',S.recoveryWins||0) +
+    row('Win rate',`${wr}%`,parseFloat(wr)>=58?'pos':'neg') +
+    row('Busts',S.busts,'neg') +
+    row('Gate busts',S.gateBusts||0) +
+    '<hr class="modal-divider">' +
+    row('Current round',`Round ${S.round}/3`) +
+    row('Cycle losses',`₦${(S.lossesAccumulated||0).toLocaleString()}`) +
+    row('Profit target',`₦${(S.profitTarget||0).toLocaleString()}`,'amb') +
+    row('Stake status',S.stakeLocked?'Locked ✅':'Awaiting ticket 📝') +
+    row('Notifications',S.pauseMode?'⏸ Paused':'▶ Active') +
+    (proj ? '<hr class="modal-divider">' +
+      row('Weekly projection',`${proj.weekly>=0?'+':'−'}₦${Math.abs(proj.weekly).toLocaleString()}`,proj.weekly>=0?'pos':'neg') +
+      row('Monthly projection',`${proj.monthly>=0?'+':'−'}₦${Math.abs(proj.monthly).toLocaleString()}`,proj.monthly>=0?'pos':'neg') +
+      row('Agent win rate',`${proj.winRate}%`)
+    : '');
   document.getElementById('statsOverlay').classList.add('show');
+}
+
+function showIntelModal() {
+  if (!INTEL) { showToast('⏳ Loading intelligence…'); loadApp(false).then(showIntelModal); return; }
+  function row(label,val,cls='') {
+    return `<div class="modal-stat-row"><span>${label}</span><span class="msval ${cls}">${val}</span></div>`;
+  }
+  const trendMap={up:'📈 Rising',down:'📉 Falling',stable:'➡️ Stable',insufficient:'⏳ Insufficient data'};
+  const proj = INTEL.projection;
+  document.getElementById('intelContent').innerHTML =
+    row('Rolling avg odds',INTEL.rollingAvg,'amb') +
+    row('Odds trend',trendMap[INTEL.trend]||'—',INTEL.trend==='up'?'pos':INTEL.trend==='down'?'neg':'') +
+    row('Agent score',INTEL.agentScore!==null?`${INTEL.agentScore}/100`:'Need 5+ cycles','amb') +
+    row('Bets logged',INTEL.betsLogged) +
+    '<hr class="modal-divider">' +
+    row('Recommended BK',`₦${(INTEL.recommendedBankroll||0).toLocaleString()}`,'amb') +
+    row('Current BK',`₦${(S?.bankroll||0).toLocaleString()}`) +
+    row('BK vs recommended', S && INTEL.recommendedBankroll
+      ? (S.bankroll >= INTEL.recommendedBankroll ? '✅ Adequate' : '⚠️ Below optimal')
+      : '—', S && INTEL.recommendedBankroll && S.bankroll>=INTEL.recommendedBankroll?'pos':'neg') +
+    '<hr class="modal-divider">' +
+    (proj
+      ? row('Win rate (real)',`${proj.winRate}%`,proj.winRate>=58?'pos':'neg') +
+        row('Avg odds (real)',proj.avgOdds,'amb') +
+        row('Weekly net',`${proj.weekly>=0?'+':'−'}₦${Math.abs(proj.weekly).toLocaleString()}`,proj.weekly>=0?'pos':'neg') +
+        row('Monthly net',`${proj.monthly>=0?'+':'−'}₦${Math.abs(proj.monthly).toLocaleString()}`,proj.monthly>=0?'pos':'neg') +
+        row('Yearly projection',`${proj.yearly>=0?'+':'−'}₦${Math.abs(proj.yearly).toLocaleString()}`,proj.yearly>=0?'pos':'neg')
+      : row('Projection','Need 5+ cycles logged'));
+  document.getElementById('intelOverlay').classList.add('show');
 }
 
 function confirmReset() { document.getElementById('resetOverlay').classList.add('show'); }
 
 async function hardReset() {
   try { await apiDelete(); } catch (_) {}
-  S = null;
-  document.getElementById('resetOverlay').classList.remove('show');
+  S = null; INTEL = null;
+  closeOverlay('resetOverlay');
   showScreen('setup');
   document.getElementById('bankrollInput').value = '';
   showToast('System reset.');
@@ -1017,33 +1627,40 @@ async function hardReset() {
 
 async function clearHistory() {
   if (!S) return;
-  try { await apiClearHistory(); S.history = []; renderHistory(); showToast('History cleared.'); }
-  catch (e) { showToast(`⚠️ ${e.message}`); }
+  try {
+    await apiClearHistory();
+    S.history = [];
+    renderHistory();
+    showToast('History cleared.');
+  } catch (e) { if (e.message!=='unauthorized') showToast(`⚠️ ${e.message}`); }
 }
 
 async function testNotify() {
-  showToast('⏳ Sending...');
+  showToast('⏳ Sending…');
   try {
-    const r = await fetch(`${API}/api/test-notify`, { method:'POST' });
+    const r = await safeFetch(`${API}/api/test-notify`, { method:'POST' });
     const d = await r.json();
-    if (r.ok) showToast('✅ Check your Telegram!');
-    else showToast(`⚠️ ${d.error}`);
-  } catch (_) { showToast('⚠️ Could not reach server.'); }
+    r.ok ? showToast('✅ Check your Telegram!') : showToast(`⚠️ ${d.error}`);
+  } catch (e) { if (e.message!=='unauthorized') showToast('⚠️ Could not reach server.'); }
 }
 
-// ═══════════════════════════════════════════
+// ─────────────────────────────────────────────
 //  TOAST
-// ═══════════════════════════════════════════
-let _toastTimer = null;
+// ─────────────────────────────────────────────
+let _toastTimer=null;
 function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
   if (_toastTimer) clearTimeout(_toastTimer);
-  _toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+  _toastTimer=setTimeout(()=>t.classList.remove('show'),2800);
 }
 
+// Keyboard shortcut
 document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && document.getElementById('setup').classList.contains('active')) initSystem();
+  if (e.key==='Enter') {
+    if (document.getElementById('auth').classList.contains('active'))  authenticate();
+    if (document.getElementById('setup').classList.contains('active')) initSystem();
+  }
 });
 </script>
 </body>
