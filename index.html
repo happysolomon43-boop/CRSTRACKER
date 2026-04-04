@@ -102,6 +102,39 @@ body{background:var(--bg);color:var(--text);font-family:'Source Serif 4',Georgia
 .banner-danger{background:var(--danger-bg);border:1px solid var(--danger-bd);color:var(--danger)}
 .banner-info{background:var(--info-bg);border:1px solid var(--info-bd);color:var(--info)}
 .banner-recovery{background:var(--recovery-bg);border:1px solid var(--recovery-bd);color:var(--recovery)}
+.banner-success{background:var(--success-bg);border:1px solid var(--success-bd);color:var(--success)}
+
+/* Pull-to-refresh */
+.ptr-bar{position:fixed;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--rust),var(--amber));transform:scaleX(0);transform-origin:left;transition:transform .25s;z-index:300}
+.ptr-bar.active{transform:scaleX(1)}
+.ptr-bar.loading{transform:scaleX(1);animation:ptr-pulse 1s ease-in-out infinite}
+@keyframes ptr-pulse{0%,100%{opacity:.35}50%{opacity:1}}
+
+/* Streak celebration */
+.celebration-banner{background:linear-gradient(135deg,rgba(76,175,114,.14),rgba(232,160,32,.08));border:1px solid var(--success-bd);border-radius:12px;padding:14px 16px;margin-bottom:12px;display:none;align-items:center;gap:10px;font-size:13px;color:var(--success)}
+.celebration-banner.show{display:flex}
+
+/* Sparkline */
+.sparkline-wrap{margin-top:10px}
+.sparkline-label{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:rgba(250,243,224,.35);margin-bottom:3px}
+
+/* Volatility badge */
+.vol-badge{display:inline-block;background:rgba(245,200,66,.12);border:1px solid rgba(245,200,66,.3);border-radius:6px;padding:2px 8px;font-size:11px;color:var(--warn);margin-left:6px}
+
+/* Calendar heatmap */
+.cal-section{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 20px;margin-bottom:16px;margin-top:4px}
+.cal-title{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--amber);margin-bottom:10px;font-weight:600}
+.cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
+.cal-dow{font-size:9px;color:var(--text-faint);text-align:center}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-day{aspect-ratio:1;border-radius:4px;background:rgba(250,243,224,.04);border:1px solid rgba(250,243,224,.06);cursor:default;transition:opacity .2s;position:relative}
+.cal-day.win{background:rgba(76,175,114,.35);border-color:var(--success-bd)}
+.cal-day.loss{background:rgba(224,92,58,.35);border-color:var(--danger-bd)}
+.cal-day.no-game{background:rgba(250,243,224,.08);border-color:rgba(250,243,224,.1)}
+.cal-day.today{box-shadow:0 0 0 2px var(--amber)}
+.cal-legend{display:flex;gap:14px;margin-top:10px}
+.cal-legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text-faint)}
+.cal-legend-dot{width:10px;height:10px;border-radius:2px}
 
 /* Bankroll card */
 .bankroll-card{background:linear-gradient(135deg,var(--rust) 0%,#7A2E08 50%,var(--bg) 100%);border-radius:18px;padding:26px 24px;margin-bottom:16px;position:relative;overflow:hidden;box-shadow:0 4px 32px rgba(196,94,26,.2)}
@@ -136,6 +169,10 @@ body{background:var(--bg);color:var(--text);font-family:'Source Serif 4',Georgia
 .ticket-input::-webkit-inner-spin-button,.ticket-input::-webkit-outer-spin-button{-webkit-appearance:none}
 .ticket-input:focus{border-color:var(--amber)}
 .ticket-input.sched-locked{border-color:rgba(74,158,219,.5);color:var(--info);cursor:not-allowed;opacity:.85}
+.legs-custom-input{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:5px 10px;font-size:13px;color:var(--text-dim);font-family:'Source Serif 4',serif;outline:none;width:62px;text-align:center;-moz-appearance:textfield;transition:all .2s}
+.legs-custom-input::-webkit-inner-spin-button,.legs-custom-input::-webkit-outer-spin-button{-webkit-appearance:none}
+.legs-custom-input:focus{border-color:var(--border-hi);color:var(--text)}
+.legs-custom-input.active{background:var(--amber-dim);border-color:var(--border-hi);color:var(--amber-hi);font-weight:600}
 .ticket-prefix{position:absolute;left:18px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--text-faint);letter-spacing:.06em;pointer-events:none}
 .ticket-preview{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:14px;display:none}
 .ticket-preview-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--text-dim);margin-bottom:6px}
@@ -183,10 +220,6 @@ body{background:var(--bg);color:var(--text);font-family:'Source Serif 4',Georgia
 .legs-pills{display:flex;gap:6px;flex-wrap:wrap}
 .pill{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-size:13px;color:var(--text-dim);cursor:pointer;transition:all .2s;font-family:'Source Serif 4',serif}
 .pill.active{background:var(--amber-dim);border-color:var(--border-hi);color:var(--amber-hi);font-weight:600}
-.legs-custom-input{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:5px 10px;font-size:13px;color:var(--text-dim);font-family:'Source Serif 4',serif;outline:none;width:62px;text-align:center;-moz-appearance:textfield;transition:all .2s}
-.legs-custom-input::-webkit-inner-spin-button,.legs-custom-input::-webkit-outer-spin-button{-webkit-appearance:none}
-.legs-custom-input:focus{border-color:var(--border-hi);color:var(--text)}
-.legs-custom-input.active{background:var(--amber-dim);border-color:var(--border-hi);color:var(--amber-hi);font-weight:600}
 .game-field{display:grid;grid-template-columns:auto 1fr 1fr;gap:10px;align-items:center;margin-bottom:10px}
 .game-num{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-faint);width:20px;text-align:center}
 .field-input{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:15px;color:var(--text);outline:none;width:100%;font-family:'DM Mono',monospace;transition:border-color .2s}
@@ -407,6 +440,9 @@ body{background:var(--bg);color:var(--text);font-family:'Source Serif 4',Georgia
   </div>
 </div>
 
+<!-- Pull-to-refresh indicator -->
+<div class="ptr-bar" id="ptrBar"></div>
+
 <!-- MAIN -->
 <div id="main" class="screen">
 
@@ -437,6 +473,26 @@ body{background:var(--bg);color:var(--text);font-family:'Source Serif 4',Georgia
     <span class="bi">🟡</span>
     <span id="recoveryText"></span>
   </div>
+  <div class="celebration-banner" id="celebrationBanner">
+    <span style="font-size:20px;flex-shrink:0">🔥</span>
+    <span id="celebrationText"></span>
+  </div>
+  <div class="banner banner-info" id="tiltBanner">
+    <span class="bi">😤</span>
+    <span id="tiltText">2 losses today — take a breath before your next stake.</span>
+  </div>
+  <div class="banner banner-info" id="roundWarnBanner">
+    <span class="bi">📊</span>
+    <span id="roundWarnText"></span>
+  </div>
+  <div class="banner banner-success" id="winLockBanner">
+    <span class="bi">💰</span>
+    <span id="winLockText"></span>
+  </div>
+  <div class="banner banner-danger" id="lossLockBanner">
+    <span class="bi">🔒</span>
+    <span>Bankroll dropped 40% from peak. System paused to protect you. Resume when ready.</span>
+  </div>
 
   <!-- Bankroll card -->
   <div class="bankroll-card">
@@ -446,6 +502,10 @@ body{background:var(--bg);color:var(--text);font-family:'Source Serif 4',Georgia
     </div>
     <div class="bk-amount"><span class="sym">₦</span><span id="bkAmount">0</span></div>
     <div class="bk-delta" id="bkDelta">Starting balance</div>
+    <div class="sparkline-wrap" id="sparklineWrap" style="display:none">
+      <div class="sparkline-label">30-bet trend</div>
+      <svg id="sparklineSvg" width="100%" height="36" preserveAspectRatio="none" style="display:block"></svg>
+    </div>
   </div>
 
   <!-- Round tracker -->
@@ -597,7 +657,25 @@ body{background:var(--bg);color:var(--text);font-family:'Source Serif 4',Georgia
     <div class="hist-empty">No bets recorded yet.</div>
   </div>
 
+  <!-- Calendar heatmap -->
+  <div class="cal-section" id="calSection">
+    <div class="cal-title">28-Day Activity</div>
+    <div class="cal-dow-row">
+      <div class="cal-dow">S</div><div class="cal-dow">M</div><div class="cal-dow">T</div>
+      <div class="cal-dow">W</div><div class="cal-dow">T</div><div class="cal-dow">F</div>
+      <div class="cal-dow">S</div>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="cal-legend">
+      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(76,175,114,.4)"></div>Win</div>
+      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(224,92,58,.4)"></div>Loss</div>
+      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(250,243,224,.1)"></div>No game</div>
+      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(250,243,224,.04);border:1px solid rgba(250,243,224,.08)"></div>No data</div>
+    </div>
+  </div>
+
   <div class="bottom-links">
+    <button class="btn-signout-link" onclick="exportJSON()">⬇ Export data</button>
     <button class="btn-signout-link" onclick="signOut()">🔐 Sign out</button>
     <button class="btn-reset-link" onclick="confirmReset()">↺ Reset &amp; start over</button>
   </div>
@@ -1005,7 +1083,8 @@ function updateTicketPreview() {
 
   // Viability
   const threshold = Math.min(Math.max(0.20 + odds * 0.05, 0.25), 0.45);
-  const viable    = bk > 2000 && stake <= bk * threshold;
+  const hardStop  = Math.max(2000, Math.round(S ? S.initialBankroll * 0.10 : 0));
+  const viable    = bk > hardStop && stake <= bk * threshold;
 
   // Render badge
   const badgeClass = label === 'PROFIT+' ? 'profit-plus' : label === 'PROFIT' ? 'profit' : label === 'CAUTIOUS' ? 'cautious' : label === 'RECOVERY' ? 'recovery' : 'survival';
@@ -1021,7 +1100,7 @@ function updateTicketPreview() {
   document.getElementById('tpStake').textContent = `₦${stake.toLocaleString()}`;
   prev.style.display = 'block';
 
-  if (!viable && bk > 2000) {
+  if (!viable && bk > hardStop) {
     warn.textContent = `⚠️ Stake (₦${stake.toLocaleString()}) exceeds ${Math.round(threshold*100)}% of bankroll. Consider waiting for better odds.`;
     warn.classList.add('show');
     btn.disabled = true;
@@ -1036,6 +1115,7 @@ async function lockStake() {
   const odds = parseFloat(raw);
   if (!odds || odds < 1.01) { showToast('⚠️ Enter valid odds first.'); return; }
   if (_busy) return; _busy = true;
+  haptic('light');
   setAllButtons(true);
   try {
     const res = await apiTicket(odds);
@@ -1068,6 +1148,7 @@ async function recordResult(outcome) {
   if (!S || _busy) return;
   if (!S.stakeLocked) { showToast('⚠️ Enter today\'s ticket odds first.'); return; }
   _busy = true; setAllButtons(true);
+  haptic('medium');
   try {
     const res = await apiResult(outcome);
     S = res.state;
@@ -1075,15 +1156,21 @@ async function recordResult(outcome) {
     renderAll();
 
     if (event.kind === 'win') {
+      haptic('heavy');
       const isRec = event.winType === 'recovery';
       document.getElementById('winModalTitle').textContent = isRec
         ? '🟢 Recovery Complete!' : (event.round === 1 ? '✅ Clean Win!' : `✅ Recovered on Round ${event.round}!`);
-      document.getElementById('winModalMsg').innerHTML = isRec
+      let winMsg = isRec
         ? `Cycle <strong>${event.cycleNumber}</strong> — losses recovered.<br>Bankroll restored: <strong style="color:var(--recovery)">₦${event.recovered.toLocaleString()}</strong> returned.<br>No profit this cycle — clean slate.<br>New bankroll: <strong style="color:var(--amber)">₦${event.bankroll.toLocaleString()}</strong>`
         : `Cycle <strong>${event.cycleNumber}</strong> complete.<br>Profit booked: <strong style="color:var(--success)">+₦${event.profit.toLocaleString()}</strong><br>New bankroll: <strong style="color:var(--amber)">₦${event.bankroll.toLocaleString()}</strong>`;
+      if (event.winLockSuggested) {
+        winMsg += `<br><br><span style="color:var(--amber)">💡 Up 30%+ — consider withdrawing ₦${event.suggestedWithdrawal.toLocaleString()} to lock in profits.</span>`;
+      }
+      document.getElementById('winModalMsg').innerHTML = winMsg;
       document.getElementById('winOverlay').classList.add('show');
 
     } else if (event.kind === 'bust') {
+      haptic('heavy');
       const isGate = event.bustType === 'gate';
       document.getElementById('bustTitle').textContent = isGate ? '🚫 Gate Bust' : '💥 Bust — Cycle Failed';
       document.getElementById('bustDesc').textContent = isGate
@@ -1092,11 +1179,19 @@ async function recordResult(outcome) {
       document.getElementById('bustDetails').innerHTML =
         `<div class="row"><span>Total lost</span><span>₦${event.lostTotal.toLocaleString()}</span></div>
          <div class="row"><span>Remaining bankroll</span><span>₦${event.bankroll.toLocaleString()}</span></div>`;
+      if (event.lossLockTriggered) {
+        document.getElementById('bustDetails').innerHTML +=
+          `<div class="row" style="color:var(--danger);margin-top:8px"><span>⚠️ Loss lock triggered</span><span>Notifications paused</span></div>`;
+      }
       document.getElementById('bustOverlay').classList.add('show');
 
     } else {
-      // Loss, advancing round
-      showToast(`Round ${event.round} — Enter next ticket when ready`);
+      // Loss advancing round
+      if (event.lossLockTriggered) {
+        showToast('🔒 Loss lock — bankroll down 40%. System paused.');
+      } else {
+        showToast(`Round ${event.round} — Enter next ticket when ready`);
+      }
     }
   } catch (e) {
     if (e.message === 'pending_result') showToast('⚠️ Enter a previous result first.');
@@ -1158,20 +1253,13 @@ function buildLegsPills() {
     const p = document.createElement('button');
     p.className = 'pill' + (n === _currentLegs ? ' active' : '');
     p.textContent = n;
-    p.onclick = () => {
-      _currentLegs = n;
-      buildLegsPills();
-      buildGameFields(n);
-    };
+    p.onclick = () => { _currentLegs = n; buildLegsPills(); buildGameFields(n); };
     c.appendChild(p);
   });
-
-  // Custom input for 6–30
   const inp = document.createElement('input');
   inp.type        = 'number';
   inp.className   = 'legs-custom-input' + (_currentLegs > 5 ? ' active' : '');
-  inp.min         = 6;
-  inp.max         = 30;
+  inp.min         = 6; inp.max = 30;
   inp.placeholder = '6–30';
   inp.value       = _currentLegs > 5 ? _currentLegs : '';
   inp.oninput = () => {
@@ -1230,13 +1318,23 @@ async function saveSchedule() {
     if (!t24) { showToast(`⚠️ Invalid time for game ${i+1}. Use e.g. 3:30 PM`); return; }
     games.push({ odds, startTime: t24 });
   }
+  // Conflict detection
+  for (let i = 0; i < games.length - 1; i++) {
+    const [h1, m1] = games[i].startTime.split(':').map(Number);
+    const [h2, m2] = games[i+1].startTime.split(':').map(Number);
+    const end1Min  = h1 * 60 + m1 + 150;
+    const start2Min = h2 * 60 + m2;
+    if (start2Min < end1Min) {
+      showToast(`⚠️ Game ${i+2} starts before Game ${i+1} ends.`);
+      return;
+    }
+  }
   if (_busy) return; _busy = true;
   try {
     const res = await apiSaveSchedule(games);
     S.todaySchedule = res.schedule;
     closeScheduler(); renderSchedule();
     showToast('✅ Schedule saved!');
-    // If stake not locked yet, lock ticket to schedule odds
     if (!S.stakeLocked && res.schedule.oddsResult) {
       const inp = document.getElementById('ticketOddsInput');
       inp.value    = res.schedule.oddsResult.rounded;
@@ -1256,17 +1354,14 @@ async function clearSchedule() {
     await apiDeleteSchedule();
     S.todaySchedule = null;
     const inp = document.getElementById('ticketOddsInput');
-    inp.value    = '';
-    inp.readOnly = false;
-    inp.classList.remove('sched-locked');
+    inp.value    = ''; inp.readOnly = false; inp.classList.remove('sched-locked');
     document.getElementById('ticketPreview').style.display = 'none';
     document.getElementById('ticketWarn').classList.remove('show');
     document.getElementById('btnLockStake').disabled = true;
     document.getElementById('ticketHint').textContent = INTEL
       ? `Rolling avg: ${INTEL.rollingAvg} · ${S.round>1?`Losses to recover: ₦${(S.lossesAccumulated||0).toLocaleString()}`:'Fresh cycle — target is dynamic'}`
       : 'Enter the effective odds from your ticket above';
-    renderSchedule();
-    showToast('Schedule cleared.');
+    renderSchedule(); showToast('Schedule cleared.');
   }
   catch (e) { if (e.message !== 'unauthorized') showToast(`⚠️ ${e.message}`); }
   finally { _busy = false; }
@@ -1417,11 +1512,14 @@ function renderAll() {
   document.getElementById('bkBadge').textContent  = `Cycle #${S.cycleNumber}`;
   const diff = S.bankroll - S.initialBankroll;
   const de = document.getElementById('bkDelta');
-  if (diff===0)      { de.textContent='Starting balance'; de.className='bk-delta'; }
-  else if (diff>0)   { de.textContent=`+₦${diff.toLocaleString()} from start (${((diff/S.initialBankroll)*100).toFixed(1)}%)`; de.className='bk-delta pos'; }
-  else               { de.textContent=`−₦${Math.abs(diff).toLocaleString()} from start`; de.className='bk-delta neg'; }
+  if (diff===0)    { de.textContent='Starting balance'; de.className='bk-delta'; }
+  else if (diff>0) { de.textContent=`+₦${diff.toLocaleString()} from start (${((diff/S.initialBankroll)*100).toFixed(1)}%)`; de.className='bk-delta pos'; }
+  else             { de.textContent=`−₦${Math.abs(diff).toLocaleString()} from start`; de.className='bk-delta neg'; }
 
-  // Round dots (always 3)
+  // Sparkline
+  renderSparkline();
+
+  // Round dots
   for (let i=1;i<=3;i++) {
     const dot = document.getElementById(`dot${i}`);
     dot.className='rdot';
@@ -1431,22 +1529,82 @@ function renderAll() {
   const rtexts = ['Round 1 — Fresh Cycle','Round 2 — Recovery Needed','Round 3 — Final Chance'];
   document.getElementById('roundText').textContent = rtexts[(S.round||1)-1];
 
-  // Recovery/survival banner for R2+
+  // Recovery/survival banner
   const rb = document.getElementById('recoveryBanner');
   if (S.round > 1 && S.phase && (S.phase==='recovery'||S.phase==='survival')) {
     document.getElementById('recoveryText').textContent =
       S.phase==='survival'
-        ? `🛡️ SURVIVAL MODE — Odds are critically low. Partial recovery only. ₦${(S.lossesAccumulated||0).toLocaleString()} at stake.`
-        : `🟡 RECOVERY MODE — Today's odds are below baseline. No profit target this round — recovering ₦${(S.lossesAccumulated||0).toLocaleString()}.`;
+        ? `🛡️ SURVIVAL MODE — Odds critically low. Partial recovery only. ₦${(S.lossesAccumulated||0).toLocaleString()} at stake.`
+        : `🟡 RECOVERY MODE — Below baseline odds. Recovering ₦${(S.lossesAccumulated||0).toLocaleString()} — no profit target this round.`;
     rb.classList.add('show');
   } else { rb.classList.remove('show'); }
 
-  // Show ticket card or stake card
+  // Streak celebration
+  const cb = document.getElementById('celebrationBanner');
+  if ((S.streak||0) >= 7) {
+    document.getElementById('celebrationText').textContent =
+      `${S.streak} days straight — incredible discipline. Keep the streak alive. 🔥`;
+    cb.classList.add('show');
+  } else { cb.classList.remove('show'); }
+
+  // Tilt detection — 2 losses same day
+  const tb = document.getElementById('tiltBanner');
+  const todayLosses = (S.history||[]).filter(h => h.type==='loss' && h.date===watDateLabel()).length;
+  if (todayLosses >= 2 && !S.stakeLocked) {
+    document.getElementById('tiltText').textContent =
+      `${todayLosses} losses today — take a breath and be deliberate before your next stake.`;
+    tb.classList.add('show');
+  } else { tb.classList.remove('show'); }
+
+  // Round-specific warning
+  const rwb = document.getElementById('roundWarnBanner');
+  if (S.round > 1 && !S.stakeLocked) {
+    const r2Losses = (S.history||[]).filter(h => h.round===2 && h.type==='loss').length;
+    const r3Losses = (S.history||[]).filter(h => h.round===3 && h.type==='loss').length;
+    if (S.round === 2 && r2Losses >= 3) {
+      document.getElementById('roundWarnText').textContent =
+        `You've lost ${r2Losses} of your last Round 2s. Stay disciplined — consider tighter odds.`;
+      rwb.classList.add('show');
+    } else if (S.round === 3 && r3Losses >= 2) {
+      document.getElementById('roundWarnText').textContent =
+        `Round 3 has gone against you ${r3Losses} times. This is final chance territory — pick carefully.`;
+      rwb.classList.add('show');
+    } else { rwb.classList.remove('show'); }
+  } else { rwb.classList.remove('show'); }
+
+  // Win lock banner
+  const wlb = document.getElementById('winLockBanner');
+  const winLockThreshold = Math.round(S.initialBankroll * 1.30);
+  if (S.bankroll >= winLockThreshold && !S.stakeLocked) {
+    const suggested = Math.round((S.bankroll - S.initialBankroll) * 0.50);
+    document.getElementById('winLockText').textContent =
+      `Bankroll up 30%+ — consider withdrawing ₦${suggested.toLocaleString()} (50% of profits) and protecting your gains.`;
+    wlb.classList.add('show');
+  } else { wlb.classList.remove('show'); }
+
+  // Loss lock banner
+  const llb = document.getElementById('lossLockBanner');
+  const peak = S.peakBankroll || S.initialBankroll;
+  if (S.pauseMode && S.bankroll < Math.round(peak * 0.60)) {
+    llb.classList.add('show');
+  } else { llb.classList.remove('show'); }
+
+  // Warn banner (dynamic hard stop)
+  const hardStop = Math.max(2000, Math.round(S.initialBankroll * 0.10));
+  const wb = document.getElementById('warnBanner');
+  if (S.bankroll <= hardStop) {
+    document.getElementById('warnText').textContent = `HARD STOP — Bankroll ≤ ₦${hardStop.toLocaleString()}. Do not bet. Reload before continuing.`;
+    wb.classList.add('show');
+  } else if (S.bankroll < S.initialBankroll * 0.4) {
+    document.getElementById('warnText').textContent = `Bankroll at ${((S.bankroll/S.initialBankroll)*100).toFixed(0)}% of start. Stay disciplined.`;
+    wb.classList.add('show');
+  } else { wb.classList.remove('show'); }
+
+  // Ticket / stake card
   const tc = document.getElementById('ticketCard');
   const sc = document.getElementById('stakeCard');
 
   if (S.stakeLocked && S.currentStake > 0) {
-    // Stake locked — show stake card
     tc.style.display = 'none';
     sc.style.display = 'block';
     sc.className = 'stake-card pulse';
@@ -1455,37 +1613,24 @@ function renderAll() {
     else if (mode==='survival') sc.classList.add('mode-survival');
 
     document.getElementById('stakeAmt').textContent = S.currentStake.toLocaleString();
-
-    // Mode badge
-    const badgeMap = { 'profit':'profit','recovery':'recovery','survival':'survival' };
     const labelMap = S.cycleLabel || (mode==='profit'?'PROFIT':mode.toUpperCase());
     const bClass   = mode==='recovery'?'recovery':mode==='survival'?'survival':labelMap==='PROFIT+'?'profit-plus':labelMap==='CAUTIOUS'?'cautious':'profit';
     document.getElementById('stakeModeBadge').innerHTML = `<span class="mode-badge ${bClass}">${labelMap}</span>`;
 
-    // Stake sub-text
     let sub='';
     const roundOdds = S.roundOdds && S.roundOdds.length ? S.roundOdds[S.roundOdds.length-1] : null;
-    if (S.round===1) {
-      sub = `Win target: <span>+₦${(S.profitTarget||0).toLocaleString()}</span>`;
-    } else if (mode==='profit') {
-      sub = `Recovering ₦${(S.lossesAccumulated||0).toLocaleString()} + profit. Win = <span>+₦${(S.profitTarget||0).toLocaleString()} net</span>`;
-    } else if (mode==='recovery') {
-      sub = `<span class="warn-span">Recovery only.</span> Win returns ₦${(S.lossesAccumulated||0).toLocaleString()} to bankroll.`;
-    } else {
-      sub = `<span class="warn-span">Survival — partial recovery.</span> No profit target.`;
-    }
+    if (S.round===1)             sub = `Win target: <span>+₦${(S.profitTarget||0).toLocaleString()}</span>`;
+    else if (mode==='profit')    sub = `Recovering ₦${(S.lossesAccumulated||0).toLocaleString()} + profit. Win = <span>+₦${(S.profitTarget||0).toLocaleString()} net</span>`;
+    else if (mode==='recovery')  sub = `<span class="warn-span">Recovery only.</span> Win returns ₦${(S.lossesAccumulated||0).toLocaleString()} to bankroll.`;
+    else                         sub = `<span class="warn-span">Survival — partial recovery.</span> No profit target.`;
     document.getElementById('stakeSub').innerHTML = sub;
-    if (S.round===3) {
-      document.getElementById('stakeSub').innerHTML += ' &nbsp;<span class="warn-span">Final chance.</span>';
-    }
+    if (S.round===3) document.getElementById('stakeSub').innerHTML += ' &nbsp;<span class="warn-span">Final chance.</span>';
     document.getElementById('stakeOddsTag').textContent = roundOdds ? `Odds: ${roundOdds} · Baseline: ${INTEL?INTEL.rollingAvg:'—'}` : '';
 
-    // Buttons enabled
     document.getElementById('btnWin').disabled  = false;
     document.getElementById('btnLoss').disabled = false;
 
   } else {
-    // Stake not locked — show ticket entry
     sc.style.display = 'none';
     tc.style.display = 'block';
 
@@ -1498,7 +1643,6 @@ function renderAll() {
     const ticketInput = document.getElementById('ticketOddsInput');
     const sch = S.todaySchedule;
     if (sch && !sch.resultEntered && sch.oddsResult) {
-      // Schedule exists — lock input to its effective odds
       ticketInput.value    = sch.oddsResult.rounded;
       ticketInput.readOnly = true;
       ticketInput.classList.add('sched-locked');
@@ -1506,27 +1650,15 @@ function renderAll() {
         `Odds from schedule (${sch.games.length} game${sch.games.length > 1 ? 's' : ''}) · Clear schedule to change`;
       updateTicketPreview();
     } else {
-      // No schedule — free entry
       ticketInput.readOnly = false;
       ticketInput.classList.remove('sched-locked');
       if (INTEL) document.getElementById('ticketHint').textContent =
         `Rolling avg: ${INTEL.rollingAvg} · ${S.round>1?`Losses to recover: ₦${(S.lossesAccumulated||0).toLocaleString()}`:'Fresh cycle — target is dynamic'}`;
     }
 
-    // Win/Loss disabled until stake locked
     document.getElementById('btnWin').disabled  = true;
     document.getElementById('btnLoss').disabled = true;
   }
-
-  // Warn banner
-  const wb = document.getElementById('warnBanner');
-  if (S.bankroll <= 2000) {
-    document.getElementById('warnText').textContent = 'HARD STOP — Bankroll ≤ ₦2,000. Do not bet. Reload before continuing.';
-    wb.classList.add('show');
-  } else if (S.bankroll < S.initialBankroll * 0.4) {
-    document.getElementById('warnText').textContent = `Bankroll at ${((S.bankroll/S.initialBankroll)*100).toFixed(0)}% of start. Stay disciplined.`;
-    wb.classList.add('show');
-  } else { wb.classList.remove('show'); }
 
   // Stats strip
   document.getElementById('statCycles').textContent = S.totalCycles;
@@ -1534,11 +1666,10 @@ function renderAll() {
   document.getElementById('statBusts').textContent  = S.busts;
   document.getElementById('statStreak').textContent = S.streak||0;
 
-  // Intelligence panel
   if (INTEL) renderIntelPanel();
-
   renderSchedule();
   renderHistory();
+  renderCalendar();
 }
 
 function renderIntelPanel() {
@@ -1604,7 +1735,8 @@ function renderHistory() {
 // ─────────────────────────────────────────────
 function closeBust() {
   closeOverlay('bustOverlay');
-  showToast(S.bankroll<=2000 ? '⛔ Hard stop. Reload bankroll.' : `Cycle reset.`);
+  const hs = Math.max(2000, Math.round((S?.initialBankroll||0) * 0.10));
+  showToast(S.bankroll <= hs ? `⛔ Hard stop. Reload bankroll.` : `Cycle reset.`);
 }
 function closeWin() { closeOverlay('winOverlay'); }
 
@@ -1703,6 +1835,136 @@ async function testNotify() {
     const d = await r.json();
     r.ok ? showToast('✅ Check your Telegram!') : showToast(`⚠️ ${d.error}`);
   } catch (e) { if (e.message!=='unauthorized') showToast('⚠️ Could not reach server.'); }
+}
+
+// ─────────────────────────────────────────────
+//  HAPTICS
+// ─────────────────────────────────────────────
+function haptic(type = 'light') {
+  if (!navigator.vibrate) return;
+  const patterns = { light: [10], medium: [20], heavy: [30, 10, 30] };
+  navigator.vibrate(patterns[type] || [10]);
+}
+
+// ─────────────────────────────────────────────
+//  PULL TO REFRESH
+// ─────────────────────────────────────────────
+(function initPTR() {
+  let startY = 0, pulling = false;
+  const bar  = document.getElementById('ptrBar');
+  document.addEventListener('touchstart', e => { startY = e.touches[0].clientY; pulling = window.scrollY === 0; }, { passive: true });
+  document.addEventListener('touchmove', e => {
+    if (!pulling) return;
+    const dy = e.touches[0].clientY - startY;
+    if (dy > 60) bar.classList.add('active');
+  }, { passive: true });
+  document.addEventListener('touchend', async () => {
+    if (!bar.classList.contains('active')) return;
+    bar.classList.remove('active'); bar.classList.add('loading');
+    try { const { state, intel } = await apiGetState(); if (state) { S = state; INTEL = intel; renderAll(); } }
+    catch (_) {}
+    bar.classList.remove('loading');
+    pulling = false;
+  });
+})();
+
+// ─────────────────────────────────────────────
+//  SPARKLINE
+// ─────────────────────────────────────────────
+function renderSparkline() {
+  const wrap = document.getElementById('sparklineWrap');
+  const svg  = document.getElementById('sparklineSvg');
+  const hist = (S.history || []).filter(h => h.bankrollAfter).slice(0, 30).reverse();
+  if (hist.length < 3) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  const vals  = hist.map(h => h.bankrollAfter);
+  const min   = Math.min(...vals), max = Math.max(...vals);
+  const range = max - min || 1;
+  const W = 300, H = 36, pad = 3;
+  const pts = vals.map((v, i) => {
+    const x = pad + (i / (vals.length - 1)) * (W - pad * 2);
+    const y = H - pad - ((v - min) / range) * (H - pad * 2);
+    return `${x},${y}`;
+  }).join(' ');
+  const lastV = vals[vals.length - 1], firstV = vals[0];
+  const color = lastV >= firstV ? 'var(--success)' : 'var(--danger)';
+  svg.innerHTML = `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" opacity=".8"/>`;
+}
+
+// ─────────────────────────────────────────────
+//  CALENDAR HEATMAP
+// ─────────────────────────────────────────────
+function renderCalendar() {
+  const grid = document.getElementById('calGrid');
+  if (!grid) return;
+  const today  = new Date(); today.setHours(0,0,0,0);
+  const days   = 28;
+  // Build lookup: date string → outcome
+  const lookup = {};
+  (S.history || []).forEach(h => {
+    if (!h.date) return;
+    // h.date is like "4 Apr" — convert back to YYYY-MM-DD via match in oddsLog isn't possible,
+    // but backend stores bankrollAfter per entry. We match by watDateLabel format.
+    const key = h.date; // "4 Apr" style
+    if (!lookup[key]) lookup[key] = h.type;
+    else if (h.type === 'win') lookup[key] = 'win'; // win takes priority
+  });
+
+  grid.innerHTML = '';
+  // Pad start so first day aligns to correct day of week
+  const startDate = new Date(today); startDate.setDate(today.getDate() - days + 1);
+  const startDow  = startDate.getDay(); // 0=Sun
+  for (let p = 0; p < startDow; p++) {
+    const ph = document.createElement('div'); ph.style.aspectRatio='1'; grid.appendChild(ph);
+  }
+
+  for (let d = 0; d < days; d++) {
+    const date = new Date(startDate); date.setDate(startDate.getDate() + d);
+    const label = date.toLocaleDateString('en-GB', { day:'numeric', month:'short' }); // "4 Apr"
+    const isToday = date.getTime() === today.getTime();
+    const cell  = document.createElement('div');
+    cell.className = 'cal-day';
+    const outcome = lookup[label];
+    if (outcome === 'win')     cell.classList.add('win');
+    else if (outcome === 'loss' || outcome === 'bust') cell.classList.add('loss');
+    else if (outcome === 'no_game') cell.classList.add('no-game');
+    if (isToday) cell.classList.add('today');
+    cell.title = `${label}${outcome ? ': ' + outcome : ''}`;
+    grid.appendChild(cell);
+  }
+}
+
+// ─────────────────────────────────────────────
+//  EXPORT JSON
+// ─────────────────────────────────────────────
+function exportJSON() {
+  if (!S) { showToast('⚠️ No data to export.'); return; }
+  const payload = {
+    exportedAt:  new Date().toISOString(),
+    bankroll:    S.bankroll,
+    initialBankroll: S.initialBankroll,
+    totalCycles: S.totalCycles,
+    successfulCycles: S.successfulCycles,
+    busts:       S.busts,
+    streak:      S.streak,
+    history:     S.history || [],
+    oddsLog:     S.oddsLog  || [],
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `crs-export-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('✅ Data exported.');
+}
+
+// ─────────────────────────────────────────────
+//  WAT DATE LABEL (mirrors backend)
+// ─────────────────────────────────────────────
+function watDateLabel() {
+  return new Date(Date.now() + 3600000).toLocaleDateString('en-GB', { day:'numeric', month:'short' });
 }
 
 // ─────────────────────────────────────────────
