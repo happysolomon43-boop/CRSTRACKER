@@ -24,8 +24,33 @@ const COLLECTION     = 'crs_users';
 const SESSIONS_COL   = 'crs_sessions';
 const MAX_HISTORY    = 150;
 const SESSION_TTL_MS = 30 * 24 * 3600 * 1000;
-const HARD_STOP      = 2000;
 const ROLLING_WINDOW = 20;
+
+function getHardStop(state) {
+  return Math.max(2000, Math.round((state?.initialBankroll || 0) * 0.10));
+}
+
+function calcVolatilityPenalty(oddsLog) {
+  const sample = (oddsLog || []).slice(0, 10);
+  if (sample.length < 5) return 0;
+  const mean     = sample.reduce((a, v) => a + v, 0) / sample.length;
+  const variance = sample.reduce((a, v) => a + Math.pow(v - mean, 2), 0) / sample.length;
+  const stdDev   = Math.sqrt(variance);
+  const normal   = mean * 0.15;
+  if (stdDev > normal * 1.5) return 0.15;
+  if (stdDev > normal * 1.2) return 0.08;
+  return 0;
+}
+
+function dynamicViabilityPct(odds, history) {
+  const base    = Math.min(Math.max(0.20 + odds * 0.05, 0.25), 0.45);
+  const settled = (history || []).filter(h => h.type === 'win' || h.type === 'loss' || h.type === 'bust');
+  if (settled.length < 10) return base;
+  const bustRate = (history || []).filter(h => h.type === 'bust').length / settled.length;
+  if (bustRate > 0.35) return parseFloat((base * 0.82).toFixed(3));
+  if (bustRate > 0.20) return parseFloat((base * 0.90).toFixed(3));
+  return base;
+}
 const DEFAULT_AVG    = 1.70;
 const MAX_ROUNDS     = 3;
 
@@ -103,24 +128,29 @@ function recoveryStake(L,o)  { return L<=0 ? 0 : Math.round(L/pf(o)); }
 function survivalStake(L,o)  { return L<=0 ? 0 : Math.round((L*0.80)/pf(o)); }
 function survivalShortfall(L,o) { return Math.max(0, L - Math.round(survivalStake(L,o)*pf(o))); }
 function viabilityPct(odds)  { return Math.min(Math.max(0.20+odds*0.05, 0.25), 0.45); }
-function isViable(stake,bk,odds) { return bk > HARD_STOP && stake <= bk*viabilityPct(odds); }
+function isViable(stake, state, odds) {
+  return state.bankroll > getHardStop(state) && stake <= state.bankroll * dynamicViabilityPct(odds, state.history);
+}
 
 function computeStake(state, todayOdds) {
-  const avg      = getRollingAverage(state.oddsLog);
-  const modeInfo = determineRoundMode(todayOdds, avg, state.round);
+  const avg        = getRollingAverage(state.oddsLog);
+  const modeInfo   = determineRoundMode(todayOdds, avg, state.round);
+  const volPenalty = state.round === 1 ? calcVolatilityPenalty(state.oddsLog) : 0;
   let stake, profitTarget, shortfall = 0;
   if (state.round === 1) {
     profitTarget = calcProfitTarget(state.bankroll, modeInfo.pct, state.history);
-    stake        = profitStake(0, profitTarget, todayOdds);
+    stake        = Math.round(profitStake(0, profitTarget, todayOdds) * (1 - volPenalty));
   } else {
     profitTarget = state.profitTarget;
-    if (modeInfo.mode === 'profit')   stake = profitStake(state.lossesAccumulated, profitTarget, todayOdds);
+    if (modeInfo.mode === 'profit')        stake = profitStake(state.lossesAccumulated, profitTarget, todayOdds);
     else if (modeInfo.mode === 'recovery') stake = recoveryStake(state.lossesAccumulated, todayOdds);
     else { stake = survivalStake(state.lossesAccumulated, todayOdds); shortfall = survivalShortfall(state.lossesAccumulated, todayOdds); }
   }
+  const vPct = dynamicViabilityPct(todayOdds, state.history);
   return { stake, profitTarget, shortfall, mode: modeInfo.mode, label: modeInfo.label, pct: modeInfo.pct,
-    viable: isViable(stake, state.bankroll, todayOdds), threshold: Math.round(viabilityPct(todayOdds)*100),
-    oddsRatio: parseFloat((todayOdds/avg).toFixed(3)), rollingAvg: avg };
+    viable: isViable(stake, state, todayOdds), threshold: Math.round(vPct * 100),
+    oddsRatio: parseFloat((todayOdds / avg).toFixed(3)), rollingAvg: avg,
+    volPenalty: Math.round(volPenalty * 100) };
 }
 
 function calcRecommendedBankroll(bankroll, oddsLog, history) {
@@ -179,7 +209,7 @@ async function cleanExpiredSessions() {
 
 // ── STATE ────────────────────────────────────────────────────
 function defaultState(bankroll) {
-  return { initialBankroll:bankroll, bankroll, round:1, cycleNumber:1, cycleStartBankroll:bankroll,
+  return { initialBankroll:bankroll, bankroll, peakBankroll:bankroll, round:1, cycleNumber:1, cycleStartBankroll:bankroll,
     profitTarget:0, cyclePct:0.05, lossesAccumulated:0, currentStake:0, stakeLocked:false,
     phase:'profit', cycleLabel:null, roundOdds:[], oddsLog:[],
     totalCycles:0, successfulCycles:0, recoveryWins:0, busts:0, gateBusts:0,
@@ -221,6 +251,7 @@ function applyWin(state) {
   const netReturn  = Math.round(s.currentStake * pf(usedOdds));
   const gain       = isRecovery ? Math.min(netReturn, s.lossesAccumulated) : s.profitTarget;
   s.bankroll += gain; s.successfulCycles++; s.totalCycles++;
+  s.peakBankroll   = Math.max(s.peakBankroll || s.initialBankroll, s.bankroll);
   if (isRecovery) s.recoveryWins = (s.recoveryWins||0)+1;
   updateStreak(s);
   s.oddsLog = [usedOdds, ...(s.oddsLog||[])].slice(0,150);
@@ -229,8 +260,11 @@ function applyWin(state) {
     profitTarget:isRecovery?0:s.profitTarget, recovered:isRecovery?gain:0,
     bankrollAfter:s.bankroll, desc:`Cycle ${s.cycleNumber} — R${s.round} ${isRecovery?'RECOVERY WIN':'WIN'} @ ${usedOdds}` };
   s.history = [histEntry, ...(s.history||[])].slice(0,MAX_HISTORY);
+  const winLockSuggested    = !isRecovery && s.bankroll >= Math.round(s.initialBankroll * 1.30);
+  const suggestedWithdrawal = winLockSuggested ? Math.round((s.bankroll - s.initialBankroll) * 0.50) : 0;
   const event = { kind:'win', winType:isRecovery?'recovery':'profit', round:s.round, cycleNumber:s.cycleNumber,
-    profit:isRecovery?0:s.profitTarget, recovered:isRecovery?gain:0, bankroll:s.bankroll, odds:usedOdds, label:s.cycleLabel };
+    profit:isRecovery?0:s.profitTarget, recovered:isRecovery?gain:0, bankroll:s.bankroll, odds:usedOdds, label:s.cycleLabel,
+    winLockSuggested, suggestedWithdrawal };
   resetCycle(s);
   return { newState:s, event };
 }
@@ -239,6 +273,13 @@ function applyLoss(state) {
   const s        = JSON.parse(JSON.stringify(state));
   const usedOdds = s.roundOdds[s.roundOdds.length-1]||DEFAULT_AVG;
   s.bankroll -= s.currentStake; s.lossesAccumulated += s.currentStake;
+  s.peakBankroll = s.peakBankroll || s.initialBankroll;
+  const lossLockTriggered = !s.pauseMode && s.bankroll < Math.round(s.peakBankroll * 0.60);
+  if (lossLockTriggered) {
+    s.pauseMode = true;
+    s.pauseStartDate = s.pauseStartDate || todayWAT();
+    s.lastPauseReminder = null;
+  }
   updateStreak(s);
   s.oddsLog = [usedOdds, ...(s.oddsLog||[])].slice(0,150);
   s.history = [{ type:'loss', date:watDateLabel(), cycle:s.cycleNumber, round:s.round, stake:s.currentStake,
@@ -246,17 +287,17 @@ function applyLoss(state) {
     desc:`Cycle ${s.cycleNumber} — R${s.round} LOSS @ ${usedOdds}` }, ...(s.history||[])].slice(0,MAX_HISTORY);
   if (s.round >= MAX_ROUNDS) {
     s.busts++; s.totalCycles++;
-    const event = { kind:'bust', bustType:'natural', round:s.round, lostTotal:s.lossesAccumulated, bankroll:s.bankroll };
+    const event = { kind:'bust', bustType:'natural', round:s.round, lostTotal:s.lossesAccumulated, bankroll:s.bankroll, lossLockTriggered };
     resetCycle(s); return { newState:s, event };
   }
   s.round++; s.phase='awaiting'; s.cycleLabel=null; s.currentStake=0; s.stakeLocked=false;
-  return { newState:s, event:{ kind:'loss', round:s.round, lossesAccumulated:s.lossesAccumulated, bankroll:s.bankroll } };
+  return { newState:s, event:{ kind:'loss', round:s.round, lossesAccumulated:s.lossesAccumulated, bankroll:s.bankroll, lossLockTriggered } };
 }
 
 // ── FIRESTORE ────────────────────────────────────────────────
 async function getState() { const d = await db.collection(COLLECTION).doc(USER_ID).get(); return d.exists ? d.data() : null; }
 async function saveState(s) {
-  const data = { ...s, history:(s.history||[]).slice(0,MAX_HISTORY), oddsLog:(s.oddsLog||[]).slice(0,150), lastCheckinDate:todayWAT(), updatedAt:new Date().toISOString(), version:'3.0' };
+  const data = { ...s, history:(s.history||[]).slice(0,MAX_HISTORY), oddsLog:(s.oddsLog||[]).slice(0,150), lastCheckinDate:todayWAT(), updatedAt:new Date().toISOString(), version:'3.1' };
   await db.collection(COLLECTION).doc(USER_ID).set(data); return data;
 }
 async function recordNoGame(state) {
@@ -312,6 +353,28 @@ async function fireRecoveryWinAlert(bankroll, event) {
   await sendTelegram(`🟢 <b>CRS — Recovery Complete</b>\n\nCycle #${event.cycleNumber} recovered.\n<b>₦${(event.recovered||0).toLocaleString()}</b> returned.\nNo profit booked — nothing lost.\n\nBankroll: <b>₦${bankroll.toLocaleString()}</b>\nClean slate. Fresh cycle. 💰`);
 }
 
+async function fireLossEncouragement(state, event) {
+  const isBust  = event.kind === 'bust';
+  const round   = event.round || state.round;
+  const bk      = `₦${state.bankroll.toLocaleString()}`;
+
+  const bustMessages = [
+    `💪 <b>CRS — Shake It Off</b>\n\nThat cycle didn't go your way — it happens to everyone. Bankroll: <b>${bk}</b>.\n\nThe system adjusts. Fresh cycle, fresh start. Stay locked in. 🔒`,
+    `🧱 <b>CRS — Stay Solid</b>\n\nOne bust doesn't define the session. You've come back before. Bankroll: <b>${bk}</b>.\n\nReset. Breathe. Come back stronger. 💰`,
+    `⚡ <b>CRS — Keep Going</b>\n\nLosses are part of the game — what matters is discipline after them. Bankroll: <b>${bk}</b>.\n\nDon't chase. Trust the process. 🎯`,
+  ];
+
+  const lossMessages = [
+    `😤 <b>CRS — Round ${round} Loss</b>\n\nThat one stings. But you're still in it — ${event.round > 2 ? 'cycle resets, system adapts' : `Round ${event.round} is next`}. Bankroll: <b>${bk}</b>.\n\nStay focused. 💪`,
+    `🎯 <b>CRS — Not Over Yet</b>\n\nOne loss doesn't decide your day. Bankroll: <b>${bk}</b>.\n\nThe system has recovery built in for exactly this. Trust it. 🔒`,
+    `🧠 <b>CRS — Discipline Wins</b>\n\nEvery good run has bad days in it. What separates winners is staying composed. Bankroll: <b>${bk}</b>.\n\nLog it, move on. 💰`,
+  ];
+
+  const pool = isBust ? bustMessages : lossMessages;
+  const msg  = pool[Math.floor(Math.random() * pool.length)];
+  await sendTelegram(msg);
+}
+
 async function checkDriftAlert(state) {
   const ol = state.oddsLog||[];
   if (ol.length<15||getOddsTrend(ol)!=='down') return;
@@ -345,18 +408,72 @@ async function runNotification(slot) {
 async function runGameEndChecker() {
   try {
     const s = await getState(); if (!s?.todaySchedule) return;
-    const sch=s.todaySchedule;
-    if (sch.date!==todayWAT()||sch.resultEntered||(sch.notificationsSent||0)>=3) return;
-    const lg=sch.games[sch.games.length-1]; if (!lg?.endTime) return;
-    const now=new Date(Date.now()+3600000), [eH,eM]=lg.endTime.split(':').map(Number);
-    const end=new Date(now); end.setHours(eH,eM,0,0); if (now<end) return;
-    const mins=(now-end)/60000; if (mins>180) return;
-    const sent=sch.notificationsSent||0; if (mins<[0,30,60][sent]) return;
-    const sk=s.stakeLocked&&s.currentStake>0?`\n💳 Stake: <b>₦${s.currentStake.toLocaleString()}</b>`:'';
-    const msgs=[`⚽ <b>CRS — Games Done!</b>\n\nLog your result now.${sk} 🎯`,`⏰ <b>CRS — Result Pending</b>\n\nGames ended ${Math.round(mins)}min ago.${sk}`,`🚨 <b>CRS — Last Reminder</b>\n\nLog before midnight.${sk}`];
-    await sendTelegram(msgs[sent]);
-    await db.collection(COLLECTION).doc(USER_ID).update({'todaySchedule.notificationsSent':sent+1});
-  } catch(e) { console.error('[GameEndChecker]',e.message); }
+    const sch = s.todaySchedule;
+    if (sch.date !== todayWAT() || sch.resultEntered) return;
+
+    const now     = new Date(Date.now() + 3600000); // WAT
+    const games   = sch.games;
+    const total   = games.length;
+    const sent    = sch.gameNotificationsSent || 0; // how many per-game msgs sent so far
+    const updates = {};
+
+    // Sort games by startTime to determine order (should already be ordered)
+    // Find next unnotified finished game
+    for (let i = sent; i < total; i++) {
+      const g = games[i];
+      if (!g.endTime) continue;
+      const [eH, eM] = g.endTime.split(':').map(Number);
+      const end = new Date(now); end.setHours(eH, eM, 0, 0);
+      if (now < end) break; // this game hasn't ended yet — stop checking
+
+      const remaining = total - i - 1;
+      let msg;
+
+      if (remaining === 0) {
+        // ALL games done — only now ask to log result
+        const sk = s.stakeLocked && s.currentStake > 0
+          ? `\n💳 Stake: <b>₦${s.currentStake.toLocaleString()}</b>`
+          : '';
+        msg = `✅ <b>CRS — All Games Done!</b>\n\nThat's the full ticket wrapped up. Head in and log your final result now.${sk} 🎯`;
+      } else if (remaining === 1) {
+        // Second-to-last game done
+        msg = `⚽ <b>CRS — Game ${i + 1} Done</b>\n\nHope that one landed! One more to go — best of luck on the last game. 🎯`;
+      } else {
+        // Mid-ticket game done
+        msg = `⚽ <b>CRS — Game ${i + 1} Done</b>\n\nHope you got that one! ${remaining} game${remaining > 1 ? 's' : ''} remaining — keep it going. 💪`;
+      }
+
+      await sendTelegram(msg);
+      updates['todaySchedule.gameNotificationsSent'] = i + 1;
+
+      // Only notify one game per 15-min cycle to avoid flooding
+      break;
+    }
+
+    if (Object.keys(updates).length) {
+      await db.collection(COLLECTION).doc(USER_ID).update(updates);
+    }
+
+    // Final result reminders (only after all games done, result not yet entered)
+    if (sent >= total && !sch.resultEntered) {
+      const lastGame   = games[total - 1];
+      const [lH, lM]   = lastGame.endTime.split(':').map(Number);
+      const lastEnd    = new Date(now); lastEnd.setHours(lH, lM, 0, 0);
+      const minsPast   = (now - lastEnd) / 60000;
+      if (minsPast < 0 || minsPast > 180) return;
+      const reminders  = sch.notificationsSent || 0;
+      if (reminders >= 2) return;
+      const delays     = [30, 75]; // 30min and 75min after all done
+      if (minsPast < delays[reminders]) return;
+      const sk         = s.stakeLocked && s.currentStake > 0 ? `\n💳 Stake: <b>₦${s.currentStake.toLocaleString()}</b>` : '';
+      const reminderMsgs = [
+        `⏰ <b>CRS — Still waiting</b>\n\nGames ended a while ago — don't forget to log your result.${sk}`,
+        `🚨 <b>CRS — Final Reminder</b>\n\nLog your result before midnight.${sk}`
+      ];
+      await sendTelegram(reminderMsgs[reminders]);
+      await db.collection(COLLECTION).doc(USER_ID).update({'todaySchedule.notificationsSent': reminders + 1});
+    }
+  } catch(e) { console.error('[GameEndChecker]', e.message); }
 }
 
 async function runMidnightChecker() {
@@ -410,7 +527,7 @@ app.use((req,res,next) => {
   if (req.method==='OPTIONS') return res.sendStatus(200); next();
 });
 
-app.get('/health',(_,res) => res.json({ok:true,version:'3.0'}));
+app.get('/health',(_,res) => res.json({ok:true,version:'3.1'}));
 
 app.post('/telegramWebhook', async (req,res) => {
   res.status(200).send('OK');
@@ -486,7 +603,7 @@ app.post('/api/ticket', async (req,res) => {
     const {odds}=req.body;
     if (!odds||typeof odds!=='number'||odds<1.01) return res.status(400).json({error:'odds must be >= 1.01'});
     const current=await getState(); if (!current) return res.status(404).json({error:'not_found'});
-    if (current.bankroll<=HARD_STOP) return res.status(422).json({error:'Bankroll at hard stop.'});
+    if (current.bankroll<=getHardStop(current)) return res.status(422).json({error:'Bankroll at hard stop.'});
     if (current.stakeLocked) return res.status(409).json({error:'Stake locked. Log result first.'});
     if (current.todaySchedule?.date<todayWAT()&&!current.todaySchedule?.resultEntered) return res.status(423).json({error:'pending_result'});
     const {newState,stakeInfo}=applyTicket(current,odds);
@@ -508,13 +625,14 @@ app.post('/api/result', async (req,res) => {
     const {outcome}=req.body;
     if (outcome!=='win'&&outcome!=='loss') return res.status(400).json({error:'outcome must be win or loss'});
     const current=await getState(); if (!current) return res.status(404).json({error:'not_found'});
-    if (current.bankroll<=HARD_STOP) return res.status(422).json({error:'Bankroll at hard stop.'});
+    if (current.bankroll<=getHardStop(current)) return res.status(422).json({error:'Bankroll at hard stop.'});
     if (!current.stakeLocked) return res.status(422).json({error:'Enter ticket odds first.'});
     if (current.todaySchedule?.date<todayWAT()&&!current.todaySchedule?.resultEntered) return res.status(423).json({error:'pending_result'});
     const {newState,event}=outcome==='win'?applyWin(current):applyLoss(current);
     if (newState.todaySchedule?.date===todayWAT()) newState.todaySchedule.resultEntered=true;
     const saved=await saveState(newState);
     if (event.kind==='win'&&event.winType==='recovery') setImmediate(()=>fireRecoveryWinAlert(saved.bankroll,event).catch(console.error));
+    if (event.kind==='loss'||event.kind==='bust') setImmediate(()=>fireLossEncouragement(saved,event).catch(console.error));
     res.json({state:saved,event});
   } catch(e) { res.status(500).json({error:e.message}); }
 });
@@ -544,8 +662,13 @@ app.post('/api/schedule', async (req,res) => {
   try {
     const {games}=req.body; if (!Array.isArray(games)||!games.length) return res.status(400).json({error:'games required'});
     const processed=games.map(g=>{const[h,m]=g.startTime.split(':').map(Number);const em=h*60+m+150;return{odds:parseFloat(g.odds),startTime:g.startTime,endTime:`${String(Math.floor(em/60)%24).padStart(2,'0')}:${String(em%60).padStart(2,'0')}`};});
-    const schedule={date:todayWAT(),games:processed,oddsResult:calcOdds(processed.map(g=>g.odds)),resultEntered:false,notificationsSent:0};
+    const schedule={date:todayWAT(),games:processed,oddsResult:calcOdds(processed.map(g=>g.odds)),resultEntered:false,notificationsSent:0,gameNotificationsSent:0};
     await db.collection(COLLECTION).doc(USER_ID).update({todaySchedule:schedule,updatedAt:new Date().toISOString()});
+    const n=processed.length;
+    const glMsg = n===1
+      ? `🍀 <b>CRS — Good Luck!</b>\n\nYour game is set. Stake your confidence and trust the system. Let's get it. 💰`
+      : `🍀 <b>CRS — Good Luck!</b>\n\n${n} games locked in. Trust the process — hope every single one lands. Let's go. 💪`;
+    setImmediate(()=>sendTelegram(glMsg).catch(console.error));
     res.json({schedule});
   } catch(e) { res.status(500).json({error:e.message}); }
 });
