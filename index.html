@@ -135,6 +135,7 @@ body{background:var(--bg);color:var(--text);font-family:'Source Serif 4',Georgia
 .ticket-input{width:100%;background:var(--surface);border:2px solid var(--border-hi);border-radius:12px;padding:18px 18px 18px 52px;font-family:'Playfair Display',serif;font-size:32px;font-weight:900;color:var(--amber-hi);outline:none;transition:border-color .2s;-moz-appearance:textfield}
 .ticket-input::-webkit-inner-spin-button,.ticket-input::-webkit-outer-spin-button{-webkit-appearance:none}
 .ticket-input:focus{border-color:var(--amber)}
+.ticket-input.sched-locked{border-color:rgba(74,158,219,.5);color:var(--info);cursor:not-allowed;opacity:.85}
 .ticket-prefix{position:absolute;left:18px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--text-faint);letter-spacing:.06em;pointer-events:none}
 .ticket-preview{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:14px;display:none}
 .ticket-preview-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--text-dim);margin-bottom:6px}
@@ -1209,9 +1210,14 @@ async function saveSchedule() {
     S.todaySchedule = res.schedule;
     closeScheduler(); renderSchedule();
     showToast('✅ Schedule saved!');
-    // If stake not locked yet, auto-fill ticket with effective odds
+    // If stake not locked yet, lock ticket to schedule odds
     if (!S.stakeLocked && res.schedule.oddsResult) {
-      document.getElementById('ticketOddsInput').value = res.schedule.oddsResult.rounded;
+      const inp = document.getElementById('ticketOddsInput');
+      inp.value    = res.schedule.oddsResult.rounded;
+      inp.readOnly = true;
+      inp.classList.add('sched-locked');
+      document.getElementById('ticketHint').textContent =
+        `Odds from schedule (${res.schedule.games.length} game${res.schedule.games.length > 1 ? 's' : ''}) · Clear schedule to change`;
       updateTicketPreview();
     }
   } catch (e) { if (e.message !== 'unauthorized') showToast(`⚠️ ${e.message}`); }
@@ -1220,7 +1226,22 @@ async function saveSchedule() {
 
 async function clearSchedule() {
   if (_busy) return; _busy = true;
-  try { await apiDeleteSchedule(); S.todaySchedule = null; renderSchedule(); showToast('Schedule cleared.'); }
+  try {
+    await apiDeleteSchedule();
+    S.todaySchedule = null;
+    const inp = document.getElementById('ticketOddsInput');
+    inp.value    = '';
+    inp.readOnly = false;
+    inp.classList.remove('sched-locked');
+    document.getElementById('ticketPreview').style.display = 'none';
+    document.getElementById('ticketWarn').classList.remove('show');
+    document.getElementById('btnLockStake').disabled = true;
+    document.getElementById('ticketHint').textContent = INTEL
+      ? `Rolling avg: ${INTEL.rollingAvg} · ${S.round>1?`Losses to recover: ₦${(S.lossesAccumulated||0).toLocaleString()}`:'Fresh cycle — target is dynamic'}`
+      : 'Enter the effective odds from your ticket above';
+    renderSchedule();
+    showToast('Schedule cleared.');
+  }
   catch (e) { if (e.message !== 'unauthorized') showToast(`⚠️ ${e.message}`); }
   finally { _busy = false; }
 }
@@ -1242,8 +1263,7 @@ function renderSchedule() {
     ? '<span class="sched-result-badge done">✅ Done</span>'
     : '<span class="sched-result-badge pending">⏳ Pending</span>';
 
-  const useBtn = !S.stakeLocked && !sch.resultEntered
-    ? `<button class="btn-use-sched-odds" onclick="useScheduleOdds()">↑ Use these odds for ticket (${or.rounded})</button>` : '';
+  const useBtn = '';
 
   display.innerHTML = `<div class="sched-display">
     ${html}
@@ -1449,8 +1469,23 @@ function renderAll() {
       : `Enter Round ${S.round} Ticket Odds`;
     document.getElementById('ticketAvgDisplay').textContent = INTEL ? INTEL.rollingAvg : '1.70';
 
-    if (INTEL) document.getElementById('ticketHint').textContent =
-      `Rolling avg: ${INTEL.rollingAvg} · ${S.round>1?`Losses to recover: ₦${(S.lossesAccumulated||0).toLocaleString()}`:'Fresh cycle — target is dynamic'}`;
+    const ticketInput = document.getElementById('ticketOddsInput');
+    const sch = S.todaySchedule;
+    if (sch && !sch.resultEntered && sch.oddsResult) {
+      // Schedule exists — lock input to its effective odds
+      ticketInput.value    = sch.oddsResult.rounded;
+      ticketInput.readOnly = true;
+      ticketInput.classList.add('sched-locked');
+      document.getElementById('ticketHint').textContent =
+        `Odds from schedule (${sch.games.length} game${sch.games.length > 1 ? 's' : ''}) · Clear schedule to change`;
+      updateTicketPreview();
+    } else {
+      // No schedule — free entry
+      ticketInput.readOnly = false;
+      ticketInput.classList.remove('sched-locked');
+      if (INTEL) document.getElementById('ticketHint').textContent =
+        `Rolling avg: ${INTEL.rollingAvg} · ${S.round>1?`Losses to recover: ₦${(S.lossesAccumulated||0).toLocaleString()}`:'Fresh cycle — target is dynamic'}`;
+    }
 
     // Win/Loss disabled until stake locked
     document.getElementById('btnWin').disabled  = true;
