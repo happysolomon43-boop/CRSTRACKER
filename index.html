@@ -512,7 +512,7 @@ body{background:var(--bg);color:var(--text);font-family:'Source Serif 4',Georgia
     <div class="setup-logo">
       <div class="icon">📈</div>
       <h1>CRS Tracker</h1>
-      <p>ADAPTATION — Set your starting bankroll</p>
+      <p id="setupSubtitle">ADAPTATION — Set your starting bankroll</p>
     </div>
     <div class="field-label">Starting Bankroll</div>
     <div class="bankroll-input-wrap">
@@ -930,7 +930,7 @@ function saveSession(token, label) {
   localStorage.setItem(ACTIVE_SESS_KEY, token);
   const sessions = _getSessions();
   if (!sessions.find(s => s.token === token)) {
-    const name = label || (sessions.length === 0 ? 'Main' : `Session ${sessions.length + 1}`);
+    const name = label || 'Main'; // saveSession is only called for the main tracker
     sessions.unshift({ id: _sessId(), label: name, token, createdAt: new Date().toISOString() });
     _saveSessions(sessions);
   }
@@ -958,6 +958,7 @@ async function safeFetch(url, opts = {}) {
   opts.headers = { ...(opts.headers || {}), ...authHeaders() };
   const r = await fetch(url, opts);
   if (r.status === 401) { handleUnauth(); throw new Error('unauthorized'); }
+  if (r.status === 503) throw new Error('server_unavailable'); // Firestore blip — don't wipe session
   return r;
 }
 
@@ -1127,8 +1128,12 @@ window.addEventListener('load', async () => {
       if (e.message === 'unauthorized') {
         clearSession(); showScreen('auth');
         showToast('⚠️ Session expired. Please sign in.');
+      } else if (e.message === 'server_unavailable') {
+        // Don't wipe session — server had a momentary Firestore error
+        showScreen('auth');
+        showToast('⚠️ Server temporarily unavailable. Try again.');
       } else {
-        showScreen('auth'); showToast('⚠️ Server unreachable.');
+        showScreen('auth'); showToast('⚠️ Could not reach server.');
       }
     }
   } else {
@@ -1150,6 +1155,11 @@ async function loadApp(fromAuth = false) {
   _trackerLabel = (infoRes.status === 'fulfilled' ? infoRes.value.label : null) || 'Main';
   const lbl = document.getElementById('trackerLabel');
   if (lbl) lbl.textContent = _trackerLabel === 'Main' ? '' : _trackerLabel;
+  // Update setup subtitle to show which tracker is being initialised
+  const setupSub = document.getElementById('setupSubtitle');
+  if (setupSub) setupSub.textContent = _trackerLabel === 'Main'
+    ? 'ADAPTATION — Set your starting bankroll'
+    : `"${_trackerLabel}" — Set starting bankroll`;
   S = state; INTEL = intel;
   if (S) { showScreen('main'); renderAll(); }
   else showScreen('setup');
@@ -1266,7 +1276,11 @@ function updateTicketPreview() {
   document.getElementById('tpStake').textContent = `₦${stake.toLocaleString()}`;
   prev.style.display = 'block';
 
-  if (!viable && bk > hardStop) {
+  if (bk <= hardStop) {
+    warn.textContent = `⛔ Bankroll at hard stop (₦${hardStop.toLocaleString()}). Reload bankroll before betting.`;
+    warn.classList.add('show');
+    btn.disabled = true;
+  } else if (!viable) {
     warn.textContent = `⚠️ Stake (₦${stake.toLocaleString()}) exceeds ${Math.round(threshold*100)}% of bankroll. Consider waiting for better odds.`;
     warn.classList.add('show');
     btn.disabled = true;
@@ -1340,7 +1354,7 @@ async function recordResult(outcome) {
       const isGate = event.bustType === 'gate';
       document.getElementById('bustTitle').textContent = isGate ? '🚫 Gate Bust' : '💥 Bust — Cycle Failed';
       document.getElementById('bustDesc').textContent = isGate
-        ? `The next round's stake exceeded ${event.gateThreshold}% of bankroll. Auto-reset triggered.`
+        ? `The next round's stake exceeded ${event.threshold}% of bankroll. Auto-reset triggered.`
         : 'All 3 rounds lost. System rescales to your new bankroll.';
       document.getElementById('bustDetails').innerHTML =
         `<div class="row"><span>Total lost</span><span>₦${event.lostTotal.toLocaleString()}</span></div>
@@ -1874,7 +1888,7 @@ function renderHistory() {
   list.innerHTML = S.history.slice(0,_histLimit).map(h => {
     const isNoGame   = h.type==='no_game';
     const isRecovery = h.type==='win' && h.isRecovery;
-    const isBust     = h.type==='loss' && h.round===3;
+    const isBust     = h.type==='bust' || (h.type==='loss' && h.round===3); // gate bust OR natural final-round bust
     const cls = isNoGame?'nogame-item':isRecovery?'recovery-item':h.type==='win'?'win-item':isBust?'bust-item':'loss-item';
     const amtCls = isNoGame?'':isRecovery?'rec':h.type==='win'?'pos':'neg';
     let amtVal;
@@ -1882,7 +1896,7 @@ function renderHistory() {
     else if (isRecovery) amtVal=`~₦${(h.recovered||0).toLocaleString()}`;
     else if (h.type==='win') amtVal=`+₦${(h.profitTarget||0).toLocaleString()}`;
     else amtVal=`−₦${(h.stake||0).toLocaleString()}`;
-    const label = isNoGame?'🚫 NO GAME':isRecovery?'🟢 RECOVERY WIN':h.type==='bust'?'💥 BUST':h.type==='win'?'✅ WIN':`❌ LOSS R${h.round}`;
+    const label = isNoGame?'🚫 NO GAME':isRecovery?'🟢 RECOVERY WIN':isBust?'💥 BUST':h.type==='win'?'✅ WIN':`❌ LOSS R${h.round}`;
     const oddsTag = h.odds ? `@ ${h.odds}` : '';
     return `<div class="hist-item ${cls}">
       <div class="hist-left">
@@ -1952,7 +1966,7 @@ function showStats() {
 }
 
 function showIntelModal() {
-  if (!INTEL) { showToast('⏳ Loading intelligence…'); loadApp(false).then(showIntelModal); return; }
+  if (!INTEL) { showToast('⏳ Loading intelligence…'); loadApp(false).then(showIntelModal).catch(() => showToast('⚠️ Could not load intelligence.')); return; }
   function row(label,val,cls='') {
     return `<div class="modal-stat-row"><span>${label}</span><span class="msval ${cls}">${val}</span></div>`;
   }
@@ -2162,7 +2176,7 @@ function renderSessionsList() {
   const sessions = _getSessions();
   const list = document.getElementById('sessionsList');
   if (!sessions.length) {
-    list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-faint);font-size:13px">No saved sessions.</div>';
+    list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-faint);font-size:13px">No trackers yet. Create one below.</div>';
     return;
   }
   list.innerHTML = sessions.map(s => {
@@ -2223,7 +2237,7 @@ function startRenameSession(id) {
 }
 
 function commitRename(id, newLabel) {
-  const label = (newLabel || '').trim() || 'Session';
+  const label = (newLabel || '').trim() || 'Tracker';
   const sessions = _getSessions();
   const s = sessions.find(s => s.id === id);
   if (s) { s.label = label; _saveSessions(sessions); }
@@ -2269,18 +2283,22 @@ async function submitNewTracker() {
       headers: { 'x-crs-secret': key, 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: label })
     });
-    if (r.status === 401) { showToast('⚠️ Wrong key.'); return; }
+    if (r.status === 401) { showToast('⚠️ Wrong key.'); btn.disabled = false; btn.textContent = 'Create Tracker'; return; }
     if (!r.ok) { const e = await r.json(); throw new Error(e.error || 'Server error'); }
     const d = await r.json();
     const sessions = _getSessions();
     sessions.push({ id: _sessId(), label: d.name, token: d.token, trackerId: d.trackerId, createdAt: new Date().toISOString() });
     _saveSessions(sessions);
-    closeAddSession();
-    renderSessionsList();
-    showToast(`✅ Tracker "${d.name}" created`);
+    closeSessionManager();
+    // Auto-switch to the new tracker right away
+    _session = d.token;
+    localStorage.setItem(ACTIVE_SESS_KEY, d.token);
+    S = null; INTEL = null;
+    showScreen('loading');
+    await loadApp(false);
+    showToast(`✅ Tracker "${d.name}" created — set your bankroll to start`);
   } catch (e) {
     showToast(`⚠️ ${e.message}`);
-  } finally {
     btn.disabled = false; btn.textContent = 'Create Tracker';
   }
 }
