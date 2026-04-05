@@ -1,19 +1,17 @@
 // ═══════════════════════════════════════════════════════════════
-//  CRS TRACKER — BACKEND v3.1 — ADAPTATION
+//  CRS TRACKER — BACKEND v3.2 — ADAPTATION
 //  Railway env vars:
 //    FIREBASE_PROJECT_ID / FIREBASE_CLIENT_EMAIL / FIREBASE_PRIVATE_KEY
 //    TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID
 //    APP_SECRET  ← master key (x-crs-secret header)
 //
-//  v3.2 changes:
-//    - PUT /api/key  → change access key (stored in Firestore, overrides APP_SECRET)
-//    - Auth middleware checks Firestore custom key hash first, then APP_SECRET
-//  v3.2 changes:
-//    - Multi-tracker support: each session carries a trackerId
-//    - POST /api/tracker/create — new independent tracker + session
-//    - GET  /api/tracker/info  — current tracker label
-//    - All state ops route through req.trackerId dynamically
-//    - Scheduler iterates all active trackers
+//  v3.1: PUT /api/key — change access key; custom key hash in Firestore
+//  v3.2: Multi-tracker support — each session carries a trackerId
+//        POST /api/tracker/create — new independent tracker + session
+//        GET  /api/tracker/info  — current tracker label
+//        All state ops route through req.trackerId dynamically
+//        Scheduler iterates all active trackers
+//        verifySession throws on Firestore errors (returns 503, not 401)
 // ═══════════════════════════════════════════════════════════════
 
 'use strict';
@@ -139,7 +137,6 @@ function profitStake(L,T,o)  { return Math.round((L+T)/pf(o)); }
 function recoveryStake(L,o)  { return L<=0 ? 0 : Math.round(L/pf(o)); }
 function survivalStake(L,o)  { return L<=0 ? 0 : Math.round((L*0.80)/pf(o)); }
 function survivalShortfall(L,o) { return Math.max(0, L - Math.round(survivalStake(L,o)*pf(o))); }
-function viabilityPct(odds)  { return Math.min(Math.max(0.20+odds*0.05, 0.25), 0.45); }
 function isViable(stake, state, odds) {
   return state.bankroll > getHardStop(state) && stake <= state.bankroll * dynamicViabilityPct(odds, state.history);
 }
@@ -203,13 +200,13 @@ async function createSession(trackerId) {
   return token;
 }
 async function verifySession(token) {
-  if (!token) return null;
-  try {
-    const doc = await db.collection(SESSIONS_COL).doc(token).get();
-    if (!doc.exists) return null;
-    if (Date.now() > new Date(doc.data().expiresAt).getTime()) { await doc.ref.delete(); return null; }
-    return doc.data().trackerId || USER_ID; // backward compat: old sessions hit main
-  } catch (_) { return null; }
+  if (!token) return { ok: false, error: null };
+  const doc = await db.collection(SESSIONS_COL).doc(token).get(); // allow to throw on Firestore error
+  if (!doc.exists) return { ok: false, error: null };
+  if (Date.now() > new Date(doc.data().expiresAt).getTime()) {
+    doc.ref.delete().catch(() => {}); return { ok: false, error: null };
+  }
+  return { ok: true, trackerId: doc.data().trackerId || USER_ID };
 }
 async function deleteSession(token) { if (token) try { await db.collection(SESSIONS_COL).doc(token).delete(); } catch (_) {} }
 async function cleanExpiredSessions() {
@@ -434,7 +431,7 @@ async function runGameEndChecker() {
   const trackers = await getAllActiveTrackers();
   for (const s of trackers) { try { if (!s?.todaySchedule) continue; const _tid = s._id;
     const sch = s.todaySchedule;
-    if (sch.date !== todayWAT() || sch.resultEntered) return;
+    if (sch.date !== todayWAT() || sch.resultEntered) continue;
 
     const now     = new Date(Date.now() + 3600000); // WAT
     const games   = sch.games;
@@ -485,11 +482,11 @@ async function runGameEndChecker() {
       const [lH, lM]   = lastGame.endTime.split(':').map(Number);
       const lastEnd    = new Date(now); lastEnd.setHours(lH, lM, 0, 0);
       const minsPast   = (now - lastEnd) / 60000;
-      if (minsPast < 0 || minsPast > 180) return;
+      if (minsPast < 0 || minsPast > 180) continue;
       const reminders  = sch.notificationsSent || 0;
-      if (reminders >= 2) return;
+      if (reminders >= 2) continue;
       const delays     = [30, 75]; // 30min and 75min after all done
-      if (minsPast < delays[reminders]) return;
+      if (minsPast < delays[reminders]) continue;
       const sk         = s.stakeLocked && s.currentStake > 0 ? `\n💳 Stake: <b>₦${s.currentStake.toLocaleString()}</b>` : '';
       const reminderMsgs = [
         `⏰ <b>CRS — Still waiting</b>\n\nGames ended a while ago — don't forget to log your result.${sk}`,
@@ -532,16 +529,18 @@ async function runPauseNotification() {
 }
 
 async function runWeeklySummary() {
-  try {
-    const s=await getState(); if (!s||s.pauseMode) return;
+  const trackers = await getAllActiveTrackers();
+  for (const s of trackers) { try {
+    if (s.pauseMode) continue;
     const ol=s.oddsLog||[], avg=getRollingAverage(ol), trend=getOddsTrend(ol);
     const te=trend==='up'?'📈':trend==='down'?'📉':'➡️';
     const wr=s.totalCycles>0?((s.successfulCycles/s.totalCycles)*100).toFixed(1):'—';
     const net=s.bankroll-s.initialBankroll, sign=net>=0?'+':'−';
     const proj=calcProjection(s,ol), pl=proj?`\nMonthly: <b>~₦${proj.monthly.toLocaleString()}</b>`:'';
-    await sendTelegram(`📊 <b>CRS Weekly</b>\n\nBankroll: <b>₦${s.bankroll.toLocaleString()}</b>\nNet: <b>${sign}₦${Math.abs(net).toLocaleString()}</b>\nStreak: ${s.streak||0} 🔥\n\nCycles: ${s.totalCycles} | Wins: ${s.successfulCycles} | Busts: ${s.busts}\nRecovery wins: ${s.recoveryWins||0}\nWin rate: <b>${wr}%</b>\n\nAvg odds: <b>${avg}</b> ${te}${pl}\n\nStay disciplined. 💰`);
-    await checkDriftAlert(s); await checkBankrollAlert(s);
-  } catch(e) { console.error('[WeeklySummary]',e.message); }
+    const lbl=s._label?`[${s._label}] `:'';
+    await sendTelegram(`📊 <b>${lbl}CRS Weekly</b>\n\nBankroll: <b>₦${s.bankroll.toLocaleString()}</b>\nNet: <b>${sign}₦${Math.abs(net).toLocaleString()}</b>\nStreak: ${s.streak||0} 🔥\n\nCycles: ${s.totalCycles} | Wins: ${s.successfulCycles} | Busts: ${s.busts}\nRecovery wins: ${s.recoveryWins||0}\nWin rate: <b>${wr}%</b>\n\nAvg odds: <b>${avg}</b> ${te}${pl}\n\nStay disciplined. 💰`);
+    await checkDriftAlert(s, s._id); await checkBankrollAlert(s, s._id);
+  } catch(e) { console.error('[WeeklySummary]', s._id, e.message); } }
 }
 
 // ── EXPRESS ──────────────────────────────────────────────────
@@ -607,9 +606,15 @@ async function isValidKey(key) {
 app.use('/api', async (req,res,next) => {
   const sess=req.headers['x-crs-session'];
   if (sess) {
-    const trackerId = await verifySession(sess);
-    if (trackerId) { req.trackerId = trackerId; return next(); }
-    return res.status(401).json({error:'Unauthorized'});
+    try {
+      const result = await verifySession(sess);
+      if (result.ok) { req.trackerId = result.trackerId; return next(); }
+      return res.status(401).json({error:'Unauthorized'});
+    } catch (e) {
+      // Firestore error — don't wipe the client session, just fail the request
+      console.error('[Auth] Firestore error:', e.message);
+      return res.status(503).json({error:'Service temporarily unavailable. Please retry.'});
+    }
   }
   if (!APP_SECRET) { console.warn('[AUTH] APP_SECRET not set.'); req.trackerId = USER_ID; return next(); }
   const key=req.headers['x-crs-secret'];
