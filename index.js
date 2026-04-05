@@ -5,9 +5,15 @@
 //    TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID
 //    APP_SECRET  ← master key (x-crs-secret header)
 //
-//  v3.1 changes:
+//  v3.2 changes:
 //    - PUT /api/key  → change access key (stored in Firestore, overrides APP_SECRET)
 //    - Auth middleware checks Firestore custom key hash first, then APP_SECRET
+//  v3.2 changes:
+//    - Multi-tracker support: each session carries a trackerId
+//    - POST /api/tracker/create — new independent tracker + session
+//    - GET  /api/tracker/info  — current tracker label
+//    - All state ops route through req.trackerId dynamically
+//    - Scheduler iterates all active trackers
 // ═══════════════════════════════════════════════════════════════
 
 'use strict';
@@ -23,7 +29,7 @@ const privateKey = process.env.FIREBASE_PRIVATE_KEY
 admin.initializeApp({ credential: admin.credential.cert({ projectId: process.env.FIREBASE_PROJECT_ID, clientEmail: process.env.FIREBASE_CLIENT_EMAIL, privateKey }) });
 const db = admin.firestore();
 
-const USER_ID        = 'crs_main';
+const USER_ID        = 'crs_main'; // default / fallback tracker
 const COLLECTION     = 'crs_users';
 const SESSIONS_COL   = 'crs_sessions';
 const CONFIG_COL     = 'crs_config';   // stores custom key hash
@@ -191,19 +197,19 @@ function calcProjection(state, oddsLog) {
 
 // ── CLOUD SESSIONS ───────────────────────────────────────────
 function genToken() { return crypto.randomBytes(32).toString('hex'); }
-async function createSession() {
+async function createSession(trackerId) {
   const token = genToken();
-  await db.collection(SESSIONS_COL).doc(token).set({ createdAt: new Date().toISOString(), expiresAt: new Date(Date.now()+SESSION_TTL_MS).toISOString() });
+  await db.collection(SESSIONS_COL).doc(token).set({ trackerId, createdAt: new Date().toISOString(), expiresAt: new Date(Date.now()+SESSION_TTL_MS).toISOString() });
   return token;
 }
 async function verifySession(token) {
-  if (!token) return false;
+  if (!token) return null;
   try {
     const doc = await db.collection(SESSIONS_COL).doc(token).get();
-    if (!doc.exists) return false;
-    if (Date.now() > new Date(doc.data().expiresAt).getTime()) { await doc.ref.delete(); return false; }
-    return true;
-  } catch (_) { return false; }
+    if (!doc.exists) return null;
+    if (Date.now() > new Date(doc.data().expiresAt).getTime()) { await doc.ref.delete(); return null; }
+    return doc.data().trackerId || USER_ID; // backward compat: old sessions hit main
+  } catch (_) { return null; }
 }
 async function deleteSession(token) { if (token) try { await db.collection(SESSIONS_COL).doc(token).delete(); } catch (_) {} }
 async function cleanExpiredSessions() {
@@ -301,16 +307,16 @@ function applyLoss(state) {
 }
 
 // ── FIRESTORE ────────────────────────────────────────────────
-async function getState() { const d = await db.collection(COLLECTION).doc(USER_ID).get(); return d.exists ? d.data() : null; }
-async function saveState(s) {
-  const data = { ...s, history:(s.history||[]).slice(0,MAX_HISTORY), oddsLog:(s.oddsLog||[]).slice(0,150), lastCheckinDate:todayWAT(), updatedAt:new Date().toISOString(), version:'3.1' };
-  await db.collection(COLLECTION).doc(USER_ID).set(data); return data;
+async function getState(trackerId) { const d = await db.collection(COLLECTION).doc(trackerId).get(); if (!d.exists) return null; const data = d.data(); return (data.bankroll != null) ? data : null; }
+async function saveState(s, trackerId) {
+  const data = { ...s, history:(s.history||[]).slice(0,MAX_HISTORY), oddsLog:(s.oddsLog||[]).slice(0,150), lastCheckinDate:todayWAT(), updatedAt:new Date().toISOString(), version:'3.2' };
+  await db.collection(COLLECTION).doc(trackerId).set(data, {merge:true}); return data;
 }
-async function recordNoGame(state) {
+async function recordNoGame(state, trackerId) {
   const s = JSON.parse(JSON.stringify(state)); const today = todayWAT();
   const streak = (s.lastStreakDate===yesterdayWAT()||s.lastStreakDate===today) ? (s.streak||0)+1 : 1;
   s.history = [{ type:'no_game', date:watDateLabel(), cycle:s.cycleNumber, round:s.round, desc:'No game today', bankrollAfter:s.bankroll }, ...(s.history||[])].slice(0,MAX_HISTORY);
-  s.streak=streak; s.lastStreakDate=today; s.todaySchedule=null; return saveState(s);
+  s.streak=streak; s.lastStreakDate=today; s.todaySchedule=null; return saveState(s, trackerId);
 }
 
 // ── TELEGRAM ─────────────────────────────────────────────────
@@ -341,12 +347,12 @@ function buildDailyMsg(state, slot) {
   return msgs[slot]||'';
 }
 
-async function fireOpportunityAlert(state, info) {
+async function fireOpportunityAlert(state, info, trackerId) {
   if (info.oddsRatio<1.30||state.lastOpportunityAlert===todayWAT()) return;
   const pct=Math.round((info.oddsRatio-1)*100), tier=info.oddsRatio>=1.5?'EXCEPTIONAL':'ABOVE AVERAGE';
   const todayOdds = parseFloat((info.rollingAvg * info.oddsRatio).toFixed(2));
   await sendTelegram(`🔥 <b>CRS — Opportunity Alert</b>\n\nToday's odds: <b>${todayOdds}</b> · Baseline: <b>${info.rollingAvg}</b>\n<b>${pct}% above</b> average — <b>${tier}</b>\n\nTargeting <b>${Math.round((info.pct||0.05)*100)}%</b> profit.\nStake is smaller than usual. Trust it. 💰`);
-  await db.collection(COLLECTION).doc(USER_ID).update({lastOpportunityAlert:todayWAT()});
+  await db.collection(COLLECTION).doc(trackerId).update({lastOpportunityAlert:todayWAT()});
 }
 
 async function fireRecoveryEntryAlert(state, info, round) {
@@ -381,39 +387,52 @@ async function fireLossEncouragement(state, event) {
   await sendTelegram(msg);
 }
 
-async function checkDriftAlert(state) {
+async function checkDriftAlert(state, trackerId) {
   const ol = state.oddsLog||[];
   if (ol.length<15||getOddsTrend(ol)!=='down') return;
   const l10=ol.slice(0,10).reduce((a,v)=>a+v,0)/10, p10=ol.length>=20?ol.slice(10,20).reduce((a,v)=>a+v,0)/10:l10;
   const drop=((p10-l10)/p10)*100;
   if (drop<15||state.lastDriftAlert&&daysBetween(state.lastDriftAlert,todayWAT())<7) return;
   await sendTelegram(`📉 <b>CRS — Agent Drift</b>\n\nRolling avg falling.\nLast 10: <b>${l10.toFixed(2)}</b> · Prev 10: <b>${p10.toFixed(2)}</b>\nDrop: <b>${drop.toFixed(1)}%</b>\n\nStakes will adapt. Monitor the agent.`);
-  await db.collection(COLLECTION).doc(USER_ID).update({lastDriftAlert:todayWAT()});
+  await db.collection(COLLECTION).doc(trackerId).update({lastDriftAlert:todayWAT()});
 }
 
-async function checkBankrollAlert(state) {
+async function checkBankrollAlert(state, trackerId) {
   const rec=calcRecommendedBankroll(state.bankroll,state.oddsLog,state.history), diff=state.bankroll-rec;
   if (Math.abs(diff/rec)*100<20||state.lastBankrollAlert&&daysBetween(state.lastBankrollAlert,todayWAT())<30) return;
   const msg = diff>0
     ? `💡 <b>CRS — Bankroll Optimisation</b>\n\nRecommended: <b>₦${rec.toLocaleString()}</b>\nCurrent: <b>₦${state.bankroll.toLocaleString()}</b>\nCould safely withdraw <b>₦${diff.toLocaleString()}</b>. 💰`
     : `⚠️ <b>CRS — Below Optimal</b>\n\nRecommended: <b>₦${rec.toLocaleString()}</b>\nCurrent: <b>₦${state.bankroll.toLocaleString()}</b>\nConsider adding <b>₦${Math.abs(diff).toLocaleString()}</b>.`;
   await sendTelegram(msg);
-  await db.collection(COLLECTION).doc(USER_ID).update({lastBankrollAlert:todayWAT()});
+  await db.collection(COLLECTION).doc(trackerId).update({lastBankrollAlert:todayWAT()});
 }
 
 // ── SCHEDULERS ───────────────────────────────────────────────
+async function getAllActiveTrackers() {
+  try {
+    const snap = await db.collection(COLLECTION).where('bankroll', '>', 0).get();
+    return snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+  } catch { return []; }
+}
+
 async function runNotification(slot) {
   try {
-    const s = await getState();
-    if (!s) { if(slot==='morning1') await sendTelegram(`🆕 <b>CRS</b>\n\nNo session yet. Open the app. 💰`); return; }
-    if (s.pauseMode||s.lastCheckinDate===todayWAT()) return;
-    const msg = buildDailyMsg(s, slot); if (msg) await sendTelegram(msg);
+    const trackers = await getAllActiveTrackers();
+    if (!trackers.length) { if(slot==='morning1') await sendTelegram(`🆕 <b>CRS</b>\n\nNo tracker initialised. Open the app. 💰`); return; }
+    const multi = trackers.length > 1;
+    for (const s of trackers) {
+      try {
+        if (s.pauseMode||s.lastCheckinDate===todayWAT()) continue;
+        const prefix = multi ? `[${s._label||s._id}] ` : '';
+        const msg = buildDailyMsg(s, slot); if (msg) await sendTelegram(prefix + msg);
+      } catch(e) { console.error('[Scheduler]', slot, s._id, e.message); }
+    }
   } catch(e) { console.error('[Scheduler]',slot,e.message); }
 }
 
 async function runGameEndChecker() {
-  try {
-    const s = await getState(); if (!s?.todaySchedule) return;
+  const trackers = await getAllActiveTrackers();
+  for (const s of trackers) { try { if (!s?.todaySchedule) continue; const _tid = s._id;
     const sch = s.todaySchedule;
     if (sch.date !== todayWAT() || sch.resultEntered) return;
 
@@ -457,7 +476,7 @@ async function runGameEndChecker() {
     }
 
     if (Object.keys(updates).length) {
-      await db.collection(COLLECTION).doc(USER_ID).update(updates);
+      await db.collection(COLLECTION).doc(_tid).update(updates);
     }
 
     // Final result reminders (only after all games done, result not yet entered)
@@ -477,37 +496,39 @@ async function runGameEndChecker() {
         `🚨 <b>CRS — Final Reminder</b>\n\nLog your result before midnight.${sk}`
       ];
       await sendTelegram(reminderMsgs[reminders]);
-      await db.collection(COLLECTION).doc(USER_ID).update({'todaySchedule.notificationsSent': reminders + 1});
+      await db.collection(COLLECTION).doc(_tid).update({'todaySchedule.notificationsSent': reminders + 1});
     }
-  } catch(e) { console.error('[GameEndChecker]', e.message); }
+  } catch(e) { console.error('[GameEndChecker]', s._id, e.message); } }
 }
 
 async function runMidnightChecker() {
-  try {
-    const s=await getState(); if (!s||s.pauseMode) return;
-    if (s.lastCheckinDate===yesterdayWAT()||s.lastCheckinDate===todayWAT()) return;
+  const trackers = await getAllActiveTrackers();
+  for (const s of trackers) { try {
+    if (!s||s.pauseMode) continue;
+    if (s.lastCheckinDate===yesterdayWAT()||s.lastCheckinDate===todayWAT()) continue;
     if (s.todaySchedule?.date<todayWAT()&&!s.todaySchedule?.resultEntered) {
-      await db.collection(COLLECTION).doc(USER_ID).update({'todaySchedule.missed':true,streak:0,updatedAt:new Date().toISOString()});
+      await db.collection(COLLECTION).doc(s._id).update({'todaySchedule.missed':true,streak:0,updatedAt:new Date().toISOString()});
       await sendTelegram(`📅 <b>CRS — Missed Day</b>\n\nGame never logged. Enter result before continuing. Streak reset.`);
     }
-  } catch(e) { console.error('[MidnightChecker]',e.message); }
+  } catch(e) { console.error('[MidnightChecker]',s._id,e.message); } }
 }
 
 async function runNoSessionReminder() {
-  try { if (!(await getState())) await sendTelegram(`🆕 <b>CRS</b>\n\nNo session. Open the app to start. 💰`); }
+  try { const t=await getAllActiveTrackers(); if (!t.length) await sendTelegram(`🆕 <b>CRS</b>\n\nNo tracker active. Open the app to start. 💰`); }
   catch(e) { console.error('[NoSessionReminder]',e.message); }
 }
 
 async function runPauseNotification() {
-  try {
-    const s=await getState(); if (!s?.pauseMode||!s?.pauseStartDate) return;
+  const trackers = await getAllActiveTrackers();
+  for (const s of trackers) { try {
+    if (!s?.pauseMode||!s?.pauseStartDate) continue;
     const days=daysBetween(s.pauseStartDate,todayWAT()), today=todayWAT();
     const [interval,tier]=days<28?[7,'weekly']:days<90?[14,'biweekly']:days<270?[30,'monthly']:[121,'quarterly'];
-    if (s.lastPauseReminder&&daysBetween(s.lastPauseReminder,today)<interval) return;
+    if (s.lastPauseReminder&&daysBetween(s.lastPauseReminder,today)<interval) continue;
     const msgs={weekly:`⏸️ <b>CRS Paused</b>\n\nToggle off when ready. 💰`,biweekly:`⏸️ <b>CRS Here</b>\n\nReady when you are. 📊`,monthly:`⏸️ <b>CRS Monthly</b>\n\nSystem ready. Open to resume. 🎯`,quarterly:`⏸️ <b>CRS Running</b>\n\nHere when needed. 💡`};
     await sendTelegram(msgs[tier]);
-    await db.collection(COLLECTION).doc(USER_ID).update({lastPauseReminder:today});
-  } catch(e) { console.error('[PauseNotification]',e.message); }
+    await db.collection(COLLECTION).doc(s._id).update({lastPauseReminder:today});
+  } catch(e) { console.error('[PauseNotification]',s._id,e.message); } }
 }
 
 async function runWeeklySummary() {
@@ -533,7 +554,7 @@ app.use((req,res,next) => {
   if (req.method==='OPTIONS') return res.sendStatus(200); next();
 });
 
-app.get('/health',(_,res) => res.json({ok:true,version:'3.1'}));
+app.get('/health',(_,res) => res.json({ok:true,version:'3.2'}));
 
 app.post('/telegramWebhook', async (req,res) => {
   res.status(200).send('OK');
@@ -543,23 +564,23 @@ app.post('/telegramWebhook', async (req,res) => {
     if (text.startsWith('/start')) {
       await sendTelegram(`👋 <b>CRS v3.0 — ADAPTATION</b>\n\nCommands:\n/status — live stake\n/stats — performance\n/intel — agent intelligence\n/pause — toggle notifications`,chatId);
     } else if (text==='/status') {
-      const s=await getState(); if (!s){await sendTelegram('⚠️ No session.',chatId);return;}
+      const s=await getState(USER_ID); if (!s){await sendTelegram('⚠️ No session.',chatId);return;}
       const diff=s.bankroll-s.initialBankroll;
       const sk=s.stakeLocked&&s.currentStake>0?`\n💳 Stake: <b>₦${s.currentStake.toLocaleString()}</b> · ${(s.cycleLabel||'—').toUpperCase()}`:`\n📝 <i>Awaiting ticket for Round ${s.round}</i>`;
       await sendTelegram(`📊 <b>CRS Status</b>\n\nBankroll: <b>₦${s.bankroll.toLocaleString()}</b>\nP&amp;L: ${diff>=0?'+':'−'}₦${Math.abs(diff).toLocaleString()}\nR${s.round}/${MAX_ROUNDS} · Cycle #${s.cycleNumber}${sk}\nStreak: ${s.streak||0} 🔥`,chatId);
     } else if (text==='/stats') {
-      const s=await getState(); if (!s){await sendTelegram('⚠️ No session.',chatId);return;}
+      const s=await getState(USER_ID); if (!s){await sendTelegram('⚠️ No session.',chatId);return;}
       const net=s.bankroll-s.initialBankroll, wr=s.totalCycles>0?((s.successfulCycles/s.totalCycles)*100).toFixed(1):'—';
       const proj=calcProjection(s,s.oddsLog||[]), pl=proj?`\nMonthly: ~₦${proj.monthly.toLocaleString()}`:'';
       await sendTelegram(`📈 <b>CRS Stats</b>\n\n₦${s.initialBankroll.toLocaleString()} → ₦${s.bankroll.toLocaleString()}\nNet: ${net>=0?'+':'−'}₦${Math.abs(net).toLocaleString()}\nStreak: ${s.streak||0} 🔥\n\nCycles: ${s.totalCycles} | Wins: ${s.successfulCycles} | Busts: ${s.busts}\nRecovery: ${s.recoveryWins||0} | Rate: ${wr}%\nAvg odds: ${getRollingAverage(s.oddsLog||[])}${pl}`,chatId);
     } else if (text==='/intel') {
-      const s=await getState(); if (!s){await sendTelegram('⚠️ No session.',chatId);return;}
+      const s=await getState(USER_ID); if (!s){await sendTelegram('⚠️ No session.',chatId);return;}
       const ol=s.oddsLog||[], avg=getRollingAverage(ol), tr=getOddsTrend(ol);
       const sc=calcAgentScore(s.history,ol), rec=calcRecommendedBankroll(s.bankroll,ol,s.history);
       const te=tr==='up'?'📈 Rising':tr==='down'?'📉 Falling':tr==='stable'?'➡️ Stable':'⏳ Not enough data';
       await sendTelegram(`🧠 <b>CRS Intel</b>\n\nAvg odds: <b>${avg}</b>\nTrend: <b>${te}</b>\nAgent score: <b>${sc!==null?sc+'/100':'—'}</b>\nBets logged: ${ol.length}\n\nRec. bankroll: <b>₦${rec.toLocaleString()}</b>\nCurrent: <b>₦${s.bankroll.toLocaleString()}</b>`,chatId);
     } else if (text==='/pause') {
-      const s=await getState(); if (!s){await sendTelegram('⚠️ No session.',chatId);return;}
+      const s=await getState(USER_ID); if (!s){await sendTelegram('⚠️ No session.',chatId);return;}
       const np=!s.pauseMode;
       await db.collection(COLLECTION).doc(USER_ID).update({pauseMode:np,pauseStartDate:np?(s.pauseStartDate||todayWAT()):null,lastPauseReminder:np?null:s.lastPauseReminder,updatedAt:new Date().toISOString()});
       await sendTelegram(np?`⏸️ <b>Paused.</b>`:`▶️ <b>Resumed.</b> 💰`,chatId);
@@ -585,17 +606,22 @@ async function isValidKey(key) {
 
 app.use('/api', async (req,res,next) => {
   const sess=req.headers['x-crs-session'];
-  if (sess && await verifySession(sess)) return next();
-  if (!APP_SECRET) { console.warn('[AUTH] APP_SECRET not set.'); return next(); }
+  if (sess) {
+    const trackerId = await verifySession(sess);
+    if (trackerId) { req.trackerId = trackerId; return next(); }
+    return res.status(401).json({error:'Unauthorized'});
+  }
+  if (!APP_SECRET) { console.warn('[AUTH] APP_SECRET not set.'); req.trackerId = USER_ID; return next(); }
   const key=req.headers['x-crs-secret'];
   if (!await isValidKey(key)) return res.status(401).json({error:'Unauthorized'});
+  req.trackerId = USER_ID;
   next();
 });
 
 app.post('/api/session/create', async (req,res) => {
   const key=req.headers['x-crs-secret'];
   if (!await isValidKey(key)) return res.status(401).json({error:'Unauthorized'});
-  try { const token=await createSession(); res.json({token,expires:new Date(Date.now()+SESSION_TTL_MS).toISOString()}); }
+  try { const token=await createSession(USER_ID); res.json({token,expires:new Date(Date.now()+SESSION_TTL_MS).toISOString()}); }
   catch(e) { res.status(500).json({error:e.message}); }
 });
 
@@ -615,9 +641,32 @@ app.put('/api/key', async (req,res) => {
 
 app.delete('/api/session', async (req,res) => { await deleteSession(req.headers['x-crs-session']); res.json({ok:true}); });
 
+// ── Create new independent tracker ────────────────────────────
+app.post('/api/tracker/create', async (req,res) => {
+  const key=req.headers['x-crs-secret'];
+  if (!await isValidKey(key)) return res.status(401).json({error:'Unauthorized'});
+  try {
+    const {name}=req.body;
+    if (!name||typeof name!=='string'||!name.trim()) return res.status(400).json({error:'Tracker name required.'});
+    const trackerId='crs_'+crypto.randomBytes(8).toString('hex');
+    await db.collection(COLLECTION).doc(trackerId).set({_label:name.trim(),_createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});
+    const token=await createSession(trackerId);
+    res.json({trackerId,token,name:name.trim(),expires:new Date(Date.now()+SESSION_TTL_MS).toISOString()});
+  } catch(e) { res.status(500).json({error:e.message}); }
+});
+
+// ── Tracker info (label) ──────────────────────────────────────
+app.get('/api/tracker/info', async (req,res) => {
+  try {
+    const d=await db.collection(COLLECTION).doc(req.trackerId).get();
+    const label=d.exists?(d.data()._label||'Main'):'Main';
+    res.json({trackerId:req.trackerId,label});
+  } catch(e) { res.status(500).json({error:e.message}); }
+});
+
 app.get('/api/state', async (req,res) => {
   try {
-    const s=await getState(); if (!s) return res.status(404).json({error:'not_found'});
+    const s=await getState(req.trackerId); if (!s) return res.status(404).json({error:'not_found'});
     const ol=s.oddsLog||[];
     res.json({state:s,intel:{rollingAvg:getRollingAverage(ol),trend:getOddsTrend(ol),agentScore:calcAgentScore(s.history,ol),recommendedBankroll:calcRecommendedBankroll(s.bankroll,ol,s.history),projection:calcProjection(s,ol),betsLogged:ol.length}});
   } catch(e) { res.status(500).json({error:e.message}); }
@@ -627,8 +676,8 @@ app.post('/api/init', async (req,res) => {
   try {
     const {bankroll}=req.body;
     if (!Number.isInteger(bankroll)||bankroll<2001) return res.status(400).json({error:'Bankroll must be > ₦2,000.'});
-    if (await getState()) return res.status(409).json({error:'State exists. Reset first.'});
-    res.status(201).json({state:await saveState(defaultState(bankroll))});
+    if (await getState(req.trackerId)) return res.status(409).json({error:'State exists. Reset first.'});
+    res.status(201).json({state:await saveState(defaultState(bankroll),req.trackerId)});
   } catch(e) { res.status(500).json({error:e.message}); }
 });
 
@@ -636,7 +685,7 @@ app.post('/api/ticket', async (req,res) => {
   try {
     const {odds}=req.body;
     if (!odds||typeof odds!=='number'||odds<1.01) return res.status(400).json({error:'odds must be >= 1.01'});
-    const current=await getState(); if (!current) return res.status(404).json({error:'not_found'});
+    const current=await getState(req.trackerId); if (!current) return res.status(404).json({error:'not_found'});
     if (current.bankroll<=getHardStop(current)) return res.status(422).json({error:'Bankroll at hard stop.'});
     if (current.stakeLocked) return res.status(409).json({error:'Stake locked. Log result first.'});
     if (current.todaySchedule?.date<todayWAT()&&!current.todaySchedule?.resultEntered) return res.status(423).json({error:'pending_result'});
@@ -644,11 +693,11 @@ app.post('/api/ticket', async (req,res) => {
     if (!stakeInfo.viable&&current.round>1) {
       newState.busts++; newState.gateBusts=(newState.gateBusts||0)+1; newState.totalCycles++;
       newState.history=[{type:'bust',date:watDateLabel(),cycle:current.cycleNumber,round:current.round,bustType:'gate',stake:stakeInfo.stake,odds,lostTotal:current.lossesAccumulated,bankrollAfter:current.bankroll,desc:`Cycle ${current.cycleNumber} — Gate Bust R${current.round}`},...(newState.history||[])].slice(0,MAX_HISTORY);
-      resetCycle(newState); const saved=await saveState(newState);
+      resetCycle(newState); const saved=await saveState(newState,req.trackerId);
       return res.json({state:saved,event:{kind:'bust',bustType:'gate',lostTotal:current.lossesAccumulated,bankroll:current.bankroll,threshold:stakeInfo.threshold},stakeInfo});
     }
-    const saved=await saveState(newState);
-    if (current.round===1&&stakeInfo.oddsRatio>=1.30) setImmediate(()=>fireOpportunityAlert(saved,stakeInfo).catch(console.error));
+    const saved=await saveState(newState,req.trackerId);
+    if (current.round===1&&stakeInfo.oddsRatio>=1.30) setImmediate(()=>fireOpportunityAlert(saved,stakeInfo,req.trackerId).catch(console.error));
     if (current.round>1&&(stakeInfo.mode==='recovery'||stakeInfo.mode==='survival')) setImmediate(()=>fireRecoveryEntryAlert(saved,stakeInfo,current.round).catch(console.error));
     res.json({state:saved,stakeInfo});
   } catch(e) { res.status(500).json({error:e.message}); }
@@ -658,13 +707,13 @@ app.post('/api/result', async (req,res) => {
   try {
     const {outcome}=req.body;
     if (outcome!=='win'&&outcome!=='loss') return res.status(400).json({error:'outcome must be win or loss'});
-    const current=await getState(); if (!current) return res.status(404).json({error:'not_found'});
+    const current=await getState(req.trackerId); if (!current) return res.status(404).json({error:'not_found'});
     if (current.bankroll<=getHardStop(current)) return res.status(422).json({error:'Bankroll at hard stop.'});
     if (!current.stakeLocked) return res.status(422).json({error:'Enter ticket odds first.'});
     if (current.todaySchedule?.date<todayWAT()&&!current.todaySchedule?.resultEntered) return res.status(423).json({error:'pending_result'});
     const {newState,event}=outcome==='win'?applyWin(current):applyLoss(current);
     if (newState.todaySchedule?.date===todayWAT()) newState.todaySchedule.resultEntered=true;
-    const saved=await saveState(newState);
+    const saved=await saveState(newState,req.trackerId);
     if (event.kind==='win'&&event.winType==='recovery') setImmediate(()=>fireRecoveryWinAlert(saved.bankroll,event).catch(console.error));
     if (event.kind==='loss'||event.kind==='bust') setImmediate(()=>fireLossEncouragement(saved,event).catch(console.error));
     res.json({state:saved,event});
@@ -673,20 +722,20 @@ app.post('/api/result', async (req,res) => {
 
 app.post('/api/no-game', async (req,res) => {
   try {
-    const current=await getState(); if (!current) return res.status(404).json({error:'not_found'});
+    const current=await getState(req.trackerId); if (!current) return res.status(404).json({error:'not_found'});
     if (current.todaySchedule?.date<todayWAT()&&!current.todaySchedule?.resultEntered) return res.status(423).json({error:'pending_result'});
-    res.json({state:await recordNoGame(current)});
+    res.json({state:await recordNoGame(current,req.trackerId)});
   } catch(e) { res.status(500).json({error:e.message}); }
 });
 
-app.delete('/api/state', async (req,res) => { try { await db.collection(COLLECTION).doc(USER_ID).delete(); res.json({ok:true}); } catch(e) { res.status(500).json({error:e.message}); } });
-app.delete('/api/history', async (req,res) => { try { await db.collection(COLLECTION).doc(USER_ID).update({history:[],oddsLog:[],updatedAt:new Date().toISOString()}); res.json({ok:true}); } catch(e) { res.status(500).json({error:e.message}); } });
+app.delete('/api/state', async (req,res) => { try { const d=await db.collection(COLLECTION).doc(req.trackerId).get(); const {_label,_createdAt}=d.exists?d.data():{}; await db.collection(COLLECTION).doc(req.trackerId).set({...(_label?{_label}:{}),  ...(_createdAt?{_createdAt}:{}), updatedAt:new Date().toISOString()}); res.json({ok:true}); } catch(e) { res.status(500).json({error:e.message}); } });
+app.delete('/api/history', async (req,res) => { try { await db.collection(COLLECTION).doc(req.trackerId).update({history:[],oddsLog:[],updatedAt:new Date().toISOString()}); res.json({ok:true}); } catch(e) { res.status(500).json({error:e.message}); } });
 
 app.post('/api/pause', async (req,res) => {
   try {
     const {pause}=req.body; if (typeof pause!=='boolean') return res.status(400).json({error:'pause must be boolean'});
-    const s=await getState(); if (!s) return res.status(404).json({error:'not_found'});
-    await db.collection(COLLECTION).doc(USER_ID).update({pauseMode:pause,pauseStartDate:pause?(s.pauseStartDate||todayWAT()):null,lastPauseReminder:pause?null:s.lastPauseReminder,updatedAt:new Date().toISOString()});
+    const s=await getState(req.trackerId); if (!s) return res.status(404).json({error:'not_found'});
+    await db.collection(COLLECTION).doc(req.trackerId).update({pauseMode:pause,pauseStartDate:pause?(s.pauseStartDate||todayWAT()):null,lastPauseReminder:pause?null:s.lastPauseReminder,updatedAt:new Date().toISOString()});
     await sendTelegram(pause?`⏸️ <b>CRS Paused.</b>`:`▶️ <b>CRS Resumed.</b> 💰`);
     res.json({pauseMode:pause});
   } catch(e) { res.status(500).json({error:e.message}); }
@@ -697,7 +746,7 @@ app.post('/api/schedule', async (req,res) => {
     const {games}=req.body; if (!Array.isArray(games)||!games.length) return res.status(400).json({error:'games required'});
     const processed=games.map(g=>{const[h,m]=g.startTime.split(':').map(Number);const em=h*60+m+150;return{odds:parseFloat(g.odds),startTime:g.startTime,endTime:`${String(Math.floor(em/60)%24).padStart(2,'0')}:${String(em%60).padStart(2,'0')}`};});
     const schedule={date:todayWAT(),games:processed,oddsResult:calcOdds(processed.map(g=>g.odds)),resultEntered:false,notificationsSent:0,gameNotificationsSent:0};
-    await db.collection(COLLECTION).doc(USER_ID).update({todaySchedule:schedule,updatedAt:new Date().toISOString()});
+    await db.collection(COLLECTION).doc(req.trackerId).update({todaySchedule:schedule,updatedAt:new Date().toISOString()});
     const n=processed.length;
     const glMsg = n===1
       ? `🍀 <b>CRS — Good Luck!</b>\n\nYour game is set. Stake your confidence and trust the system. Let's get it. 💰`
@@ -707,9 +756,9 @@ app.post('/api/schedule', async (req,res) => {
   } catch(e) { res.status(500).json({error:e.message}); }
 });
 
-app.delete('/api/schedule', async (req,res) => { try { await db.collection(COLLECTION).doc(USER_ID).update({todaySchedule:null,updatedAt:new Date().toISOString()}); res.json({ok:true}); } catch(e) { res.status(500).json({error:e.message}); } });
+app.delete('/api/schedule', async (req,res) => { try { await db.collection(COLLECTION).doc(req.trackerId).update({todaySchedule:null,updatedAt:new Date().toISOString()}); res.json({ok:true}); } catch(e) { res.status(500).json({error:e.message}); } });
 app.post('/api/calc-odds', async (req,res) => { try { const {legs}=req.body; if (!Array.isArray(legs)||!legs.length) return res.status(400).json({error:'legs required'}); res.json(calcOdds(legs)); } catch(e) { res.status(500).json({error:e.message}); } });
-app.get('/api/intel', async (req,res) => { try { const s=await getState(); if (!s) return res.status(404).json({error:'not_found'}); const ol=s.oddsLog||[]; res.json({rollingAvg:getRollingAverage(ol),trend:getOddsTrend(ol),agentScore:calcAgentScore(s.history,ol),recommendedBankroll:calcRecommendedBankroll(s.bankroll,ol,s.history),projection:calcProjection(s,ol),betsLogged:ol.length}); } catch(e) { res.status(500).json({error:e.message}); } });
+app.get('/api/intel', async (req,res) => { try { const s=await getState(req.trackerId); if (!s) return res.status(404).json({error:'not_found'}); const ol=s.oddsLog||[]; res.json({rollingAvg:getRollingAverage(ol),trend:getOddsTrend(ol),agentScore:calcAgentScore(s.history,ol),recommendedBankroll:calcRecommendedBankroll(s.bankroll,ol,s.history),projection:calcProjection(s,ol),betsLogged:ol.length}); } catch(e) { res.status(500).json({error:e.message}); } });
 app.post('/api/test-notify', async (req,res) => { try { const ok=await sendTelegram(`🔔 <b>CRS v3.0 Test</b>\n\nTelegram working.\n/status · /stats · /intel · /pause`); ok?res.json({ok:true}):res.status(500).json({error:'Failed'}); } catch(e) { res.status(500).json({error:e.message}); } });
 
 function startScheduler() {
