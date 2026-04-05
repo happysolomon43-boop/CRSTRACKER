@@ -444,36 +444,39 @@ body{background:var(--bg);color:var(--text);font-family:'Source Serif 4',Georgia
 <body>
 
 <!-- LOADING -->
-<div id="loading" class="screen active" style="min-height:100vh;display:flex;align-items:center;justify-content:center">
+<div id="loading" class="screen" style="min-height:100vh;display:flex;align-items:center;justify-content:center">
   <div style="text-align:center">
     <div style="width:48px;height:48px;background:linear-gradient(135deg,var(--rust),var(--amber));border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:22px;box-shadow:0 8px 24px rgba(232,160,32,.25);animation:pulse 1.5s infinite">🔐</div>
     <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--amber-hi)">CRS Tracker</div>
-    <div style="font-size:12px;color:var(--text-faint);margin-top:6px;letter-spacing:.08em">Loading2026</div>
+    <div style="font-size:12px;color:var(--text-faint);margin-top:6px;letter-spacing:.08em">Switching…</div>
   </div>
 </div>
 
 
-<!-- SESSION MANAGER -->
+<!-- TRACKER MANAGER -->
 <div class="sessions-overlay" id="sessionsOverlay" onclick="if(event.target===this)closeSessionManager()">
   <div class="sessions-sheet">
     <div class="sessions-header">
-      <div class="sessions-title">Sessions</div>
+      <div>
+        <div class="sessions-title">Trackers</div>
+        <div style="font-size:11px;color:var(--text-faint);margin-top:2px">Each tracker is a separate independent bankroll</div>
+      </div>
       <button class="sessions-close" onclick="closeSessionManager()">✕</button>
     </div>
     <div class="sessions-list" id="sessionsList"></div>
     <div class="sessions-footer">
       <button class="sessions-add-btn" id="sessAddBtn" onclick="openAddSession()">
-        <span>＋</span> New Session
+        <span>＋</span> New Tracker
       </button>
       <div class="sessions-add-form" id="sessAddForm">
         <div class="sessions-add-inner">
-          <div class="sessions-add-label">Add Session</div>
-          <input class="sessions-name-input" id="sessNameInput" placeholder="Label (e.g. Phone, Tablet)" maxlength="24">
+          <div class="sessions-add-label">Create New Tracker</div>
+          <input class="sessions-name-input" id="sessNameInput" placeholder="Tracker name (e.g. Weekend, Secondary)" maxlength="24">
           <div class="sessions-key-wrap">
-            <input class="sessions-key-input" id="sessKeyInput" type="password" placeholder="Enter access key" autocomplete="off">
+            <input class="sessions-key-input" id="sessKeyInput" type="password" placeholder="Enter master access key" autocomplete="off">
             <button class="sessions-key-eye" onclick="toggleEye('sessKeyInput','sessEyeBtn')" id="sessEyeBtn">👁</button>
           </div>
-          <button class="sessions-add-submit" id="sessAddSubmit" onclick="submitNewSession()">Create Session</button>
+          <button class="sessions-add-submit" id="sessAddSubmit" onclick="submitNewTracker()">Create Tracker</button>
           <button class="sessions-add-cancel" onclick="closeAddSession()">Cancel</button>
         </div>
       </div>
@@ -533,12 +536,13 @@ body{background:var(--bg);color:var(--text);font-family:'Source Serif 4',Georgia
     <div>
       <div class="top-bar-title">CRS Tracker</div>
       <div class="top-bar-sub" id="dateLabel">—</div>
+      <div class="top-bar-sub" id="trackerLabel" style="font-size:10px;color:var(--amber);opacity:.7;margin-top:1px"></div>
     </div>
     <div class="top-bar-actions">
       <button class="btn-pause" id="pauseBtn" onclick="togglePause()">⏸ Pause</button>
       <button class="btn-icon" onclick="showStats()" title="Stats">📊</button>
       <button class="btn-icon" onclick="showIntelModal()" title="Intelligence">🧠</button>
-      <button class="btn-icon" onclick="openSessionManager()" title="Sessions" id="sessionsMgrBtn">⚡</button>
+      <button class="btn-icon" onclick="openSessionManager()" title="Trackers" id="sessionsMgrBtn">⚡</button>
       <button class="btn-icon" onclick="confirmReset()" title="Reset">↺</button>
     </div>
   </div>
@@ -891,6 +895,7 @@ let S        = null;   // Main state from server
 let INTEL    = null;   // Intelligence data from server
 let _busy    = false;
 let _session = '';     // Cloud session token
+let _trackerLabel = 'Main'; // Current tracker label
 let _secret  = '';     // Master key (only in memory, never persisted)
 let _currentLegs      = 3;
 let _timePickerTarget = null;
@@ -1132,11 +1137,19 @@ window.addEventListener('load', async () => {
 });
 
 async function loadApp(fromAuth = false) {
-  const { state, intel } = await apiGetState();
+  const [stateRes, infoRes] = await Promise.allSettled([
+    apiGetState(),
+    fetch(`${API}/api/tracker/info`, { headers: authHeaders() }).then(r => r.ok ? r.json() : {label:'Main'})
+  ]);
   if (fromAuth) {
     const btn = document.getElementById('authBtn');
     btn.textContent = 'Unlock →'; btn.disabled = false;
   }
+  if (stateRes.status === 'rejected') throw stateRes.reason;
+  const { state, intel } = stateRes.value;
+  _trackerLabel = (infoRes.status === 'fulfilled' ? infoRes.value.label : null) || 'Main';
+  const lbl = document.getElementById('trackerLabel');
+  if (lbl) lbl.textContent = _trackerLabel === 'Main' ? '' : _trackerLabel;
   S = state; INTEL = intel;
   if (S) { showScreen('main'); renderAll(); }
   else showScreen('setup');
@@ -2155,10 +2168,11 @@ function renderSessionsList() {
   list.innerHTML = sessions.map(s => {
     const isActive = s.token === _session;
     const date = new Date(s.createdAt).toLocaleDateString('en-GB', { day:'numeric', month:'short', timeZone:'Africa/Lagos' });
+    const isMain = !s.trackerId || s.trackerId === 'crs_main';
     return `<div class="session-item ${isActive ? 'active-sess' : ''}" id="sess_${s.id}">
       <div class="sess-dot"></div>
       <div class="sess-info" onclick="${isActive ? '' : `switchSession('${s.token}')`}" style="${isActive ? '' : 'cursor:pointer'}">
-        <div class="sess-label" id="sess_label_${s.id}">${s.label}</div>
+        <div class="sess-label" id="sess_label_${s.id}">${s.label}${isMain ? ' <span style="font-size:9px;opacity:.5;font-weight:400">MAIN</span>' : ''}</div>
         <div class="sess-date">${isActive ? '● Active · ' : ''}${date}</div>
       </div>
       <div class="sess-actions">
@@ -2189,7 +2203,7 @@ async function switchSession(token) {
       localStorage.setItem(ACTIVE_SESS_KEY, prev || '');
       if (prev) { try { await loadApp(false); } catch (_) {} }
       else { showScreen('auth'); }
-      showToast('⚠️ That session expired and was removed.');
+      showToast('⚠️ That tracker session expired and was removed.');
     } else {
       _session = prev;
       localStorage.setItem(ACTIVE_SESS_KEY, prev || '');
@@ -2242,30 +2256,32 @@ function closeAddSession() {
   document.getElementById('sessAddForm').classList.remove('open');
 }
 
-async function submitNewSession() {
+async function submitNewTracker() {
   const key   = document.getElementById('sessKeyInput').value.trim();
   const label = document.getElementById('sessNameInput').value.trim();
   if (!key) { showToast('⚠️ Enter your access key.'); return; }
+  if (!label) { showToast('⚠️ Enter a tracker name.'); return; }
   const btn = document.getElementById('sessAddSubmit');
   btn.disabled = true; btn.textContent = 'Creating…';
   try {
-    const r = await fetch(`${API}/api/session/create`, {
-      method: 'POST', headers: { 'x-crs-secret': key }
+    const r = await fetch(`${API}/api/tracker/create`, {
+      method: 'POST',
+      headers: { 'x-crs-secret': key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: label })
     });
     if (r.status === 401) { showToast('⚠️ Wrong key.'); return; }
-    if (!r.ok) throw new Error('Server error');
+    if (!r.ok) { const e = await r.json(); throw new Error(e.error || 'Server error'); }
     const d = await r.json();
     const sessions = _getSessions();
-    const name = label || `Session ${sessions.length + 1}`;
-    sessions.push({ id: _sessId(), label: name, token: d.token, createdAt: new Date().toISOString() });
+    sessions.push({ id: _sessId(), label: d.name, token: d.token, trackerId: d.trackerId, createdAt: new Date().toISOString() });
     _saveSessions(sessions);
     closeAddSession();
     renderSessionsList();
-    showToast(`✅ "${name}" created`);
+    showToast(`✅ Tracker "${d.name}" created`);
   } catch (e) {
-    showToast('⚠️ Could not create session.');
+    showToast(`⚠️ ${e.message}`);
   } finally {
-    btn.disabled = false; btn.textContent = 'Create Session';
+    btn.disabled = false; btn.textContent = 'Create Tracker';
   }
 }
 
