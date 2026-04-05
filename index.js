@@ -1,9 +1,13 @@
 // ═══════════════════════════════════════════════════════════════
-//  CRS TRACKER — BACKEND v3.0 — ADAPTATION
+//  CRS TRACKER — BACKEND v3.1 — ADAPTATION
 //  Railway env vars:
 //    FIREBASE_PROJECT_ID / FIREBASE_CLIENT_EMAIL / FIREBASE_PRIVATE_KEY
 //    TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID
 //    APP_SECRET  ← master key (x-crs-secret header)
+//
+//  v3.1 changes:
+//    - PUT /api/key  → change access key (stored in Firestore, overrides APP_SECRET)
+//    - Auth middleware checks Firestore custom key hash first, then APP_SECRET
 // ═══════════════════════════════════════════════════════════════
 
 'use strict';
@@ -14,7 +18,7 @@ const cron    = require('node-cron');
 const crypto  = require('crypto');
 
 const privateKey = process.env.FIREBASE_PRIVATE_KEY
-  ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') : undefined;
+  ? process.env.FIREBASE_PRIVATE_KEY.replace(/\n/g, '\n') : undefined;
 
 admin.initializeApp({ credential: admin.credential.cert({ projectId: process.env.FIREBASE_PROJECT_ID, clientEmail: process.env.FIREBASE_CLIENT_EMAIL, privateKey }) });
 const db = admin.firestore();
@@ -22,6 +26,8 @@ const db = admin.firestore();
 const USER_ID        = 'crs_main';
 const COLLECTION     = 'crs_users';
 const SESSIONS_COL   = 'crs_sessions';
+const CONFIG_COL     = 'crs_config';   // stores custom key hash
+const CONFIG_ID      = 'main';
 const MAX_HISTORY    = 150;
 const SESSION_TTL_MS = 30 * 24 * 3600 * 1000;
 const ROLLING_WINDOW = 20;
@@ -561,22 +567,50 @@ app.post('/telegramWebhook', async (req,res) => {
   } catch(e) { console.error('[webhook]',e.message); }
 });
 
-const APP_SECRET=process.env.APP_SECRET;
+const APP_SECRET = process.env.APP_SECRET;
+
+// ── Config (custom key override) ────────────────────────────
+async function getConfig() {
+  try { const d=await db.collection(CONFIG_COL).doc(CONFIG_ID).get(); return d.exists?d.data():null; } catch { return null; }
+}
+async function isValidKey(key) {
+  if (!key) return false;
+  const cfg = await getConfig();
+  if (cfg?.customKeyHash) {
+    const hash = crypto.createHash('sha256').update(key).digest('hex');
+    if (hash === cfg.customKeyHash) return true;
+  }
+  return APP_SECRET && key === APP_SECRET;
+}
 
 app.use('/api', async (req,res,next) => {
   const sess=req.headers['x-crs-session'];
-  if (sess&&await verifySession(sess)) return next();
-  if (!APP_SECRET){console.warn('[AUTH] APP_SECRET not set.');return next();}
+  if (sess && await verifySession(sess)) return next();
+  if (!APP_SECRET) { console.warn('[AUTH] APP_SECRET not set.'); return next(); }
   const key=req.headers['x-crs-secret'];
-  if (!key||key!==APP_SECRET) return res.status(401).json({error:'Unauthorized'});
+  if (!await isValidKey(key)) return res.status(401).json({error:'Unauthorized'});
   next();
 });
 
 app.post('/api/session/create', async (req,res) => {
   const key=req.headers['x-crs-secret'];
-  if (!APP_SECRET||key!==APP_SECRET) return res.status(401).json({error:'Unauthorized'});
+  if (!await isValidKey(key)) return res.status(401).json({error:'Unauthorized'});
   try { const token=await createSession(); res.json({token,expires:new Date(Date.now()+SESSION_TTL_MS).toISOString()}); }
   catch(e) { res.status(500).json({error:e.message}); }
+});
+
+// ── Change key ───────────────────────────────────────────────
+app.put('/api/key', async (req,res) => {
+  try {
+    const {newKey}=req.body;
+    if (!newKey||typeof newKey!=='string'||newKey.length<6) return res.status(400).json({error:'Key must be at least 6 characters.'});
+    const hash=crypto.createHash('sha256').update(newKey).digest('hex');
+    await db.collection(CONFIG_COL).doc(CONFIG_ID).set({customKeyHash:hash,updatedAt:new Date().toISOString()},{merge:true});
+    // Invalidate all existing sessions
+    const snap=await db.collection(SESSIONS_COL).limit(200).get();
+    if (!snap.empty) { const batch=db.batch(); snap.forEach(d=>batch.delete(d.ref)); await batch.commit(); }
+    res.json({ok:true});
+  } catch(e) { res.status(500).json({error:e.message}); }
 });
 
 app.delete('/api/session', async (req,res) => { await deleteSession(req.headers['x-crs-session']); res.json({ok:true}); });
