@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 //  CRS TRACKER — BACKEND v3.2 — ADAPTATION
-//  Railway env vars:
+//  Render env vars:
 //    FIREBASE_PROJECT_ID / FIREBASE_CLIENT_EMAIL / FIREBASE_PRIVATE_KEY
 //    TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID
 //    APP_SECRET  ← master key (x-crs-secret header)
@@ -35,6 +35,7 @@ const CONFIG_ID      = 'main';
 const MAX_HISTORY    = 150;
 const SESSION_TTL_MS = 30 * 24 * 3600 * 1000;
 const ROLLING_WINDOW = 20;
+
 
 function getHardStop(state) {
   return Math.max(2000, Math.round((state?.initialBankroll || 0) * 0.10));
@@ -778,6 +779,7 @@ function startScheduler() {
   cron.schedule('0 9 * * *',    ()=>runPauseNotification());
   cron.schedule('0 7 * * 0',    ()=>runWeeklySummary());
   cron.schedule('0 3 * * 0',    ()=>cleanExpiredSessions());
+  cron.schedule('*/10 * * * *', ()=>fetch('https://crstracker.onrender.com/health').catch(()=>{}));
   console.log('[CRS v3.0] Scheduler active');
 }
 
